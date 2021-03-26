@@ -9,72 +9,18 @@ from datetime import datetime
 import shutil
 import socket
 import time
+import os
+
 import torch
+import torch.nn as nn
 from tensorboardX import SummaryWriter
 from torch.optim import lr_scheduler
 
-from dataloaders import kitti_dataloader, nyu_dataloader
-from dataloaders.path import Path
-from metrics import AverageMeter, Result
-import utils
-import criteria
-import os
-import torch.nn as nn
-
-import numpy as np
-
 from network import FCRN
+from utils import criteria, utils
+from utils.metrics import AverageMeter, Result, create_loader
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
-
-args = utils.parse_command()
-print(args)
-
-best_result = Result()
-best_result.set_to_worst()
-
-
-def create_loader(args):
-    traindir = os.path.join(Path.db_root_dir(args.dataset), 'train')
-    if os.path.exists(traindir):
-        print('Train dataset "{}" is existed!'.format(traindir))
-    else:
-        print('Train dataset "{}" is not existed!'.format(traindir))
-        exit(-1)
-
-    valdir = os.path.join(Path.db_root_dir(args.dataset), 'val')
-    if os.path.exists(traindir):
-        print('Train dataset "{}" is existed!'.format(valdir))
-    else:
-        print('Train dataset "{}" is not existed!'.format(valdir))
-        exit(-1)
-
-    if args.dataset == 'kitti':
-        train_set = kitti_dataloader.KITTIDataset(traindir, type='train')
-        val_set = kitti_dataloader.KITTIDataset(valdir, type='val')
-
-        # sample 3200 pictures for validation from val set
-        weights = [1 for i in range(len(val_set))]
-        print('weights:', len(weights))
-        sampler = torch.utils.data.WeightedRandomSampler(weights, num_samples=3200)
-    elif args.dataset == 'nyu':
-        train_set = nyu_dataloader.NYUDataset(traindir, type='train')
-        val_set = nyu_dataloader.NYUDataset(valdir, type='val')
-    else:
-        print('no dataset named as ', args.dataset)
-        exit(-1)
-
-    train_loader = torch.utils.data.DataLoader(
-        train_set, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True)
-
-    if args.dataset == 'kitti':
-        val_loader = torch.utils.data.DataLoader(
-            val_set, batch_size=args.batch_size, sampler=sampler, num_workers=args.workers, pin_memory=True)
-    else:
-        val_loader = torch.utils.data.DataLoader(
-            val_set, batch_size=1, shuffle=False, num_workers=args.workers, pin_memory=True)
-
-    return train_loader, val_loader
 
 
 def main():
@@ -344,4 +290,10 @@ def validate(val_loader, model, epoch, logger):
 
 
 if __name__ == '__main__':
+    args = utils.parse_command()
+    print(args)
+
+    best_result = Result()
+    best_result.set_to_worst()
+
     main()
