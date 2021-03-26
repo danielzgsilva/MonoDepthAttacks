@@ -295,7 +295,7 @@ def choose_decoder(decoder, in_channels):
 
 
 class ResNet(nn.Module):
-    def __init__(self, dataset = 'kitti', layers = 50, decoder = 'upproj', output_size=(228, 304), in_channels=3, pretrained=True):
+    def __init__(self, layers=50, decoder='upproj', output_size=(228, 304), in_channels=3, pretrained=True):
 
         if layers not in [18, 34, 50, 101, 152]:
             raise RuntimeError(

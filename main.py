@@ -20,6 +20,7 @@ from network import FCRN
 from utils import criteria, utils
 from utils.metrics import AverageMeter, Result, create_loader
 
+
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
 
@@ -37,6 +38,7 @@ def main():
 
     train_loader, val_loader = create_loader(args)
 
+    # load model
     if args.resume:
         assert os.path.isfile(args.resume), \
             "=> no checkpoint found at '{}'".format(args.resume)
@@ -62,7 +64,7 @@ def main():
         torch.cuda.empty_cache()
     else:
         print("=> creating Model")
-        model = FCRN.ResNet(output_size=train_loader.dataset.output_size)
+        model = FCRN.ResNet(layers=args.resnet_layers, output_size=train_loader.dataset.output_size)
         print("=> model created.")
         start_epoch = 0
 
@@ -76,8 +78,7 @@ def main():
         model = nn.DataParallel(model).cuda()
 
     # when training, use reduceLROnPlateau to reduce learning rate
-    scheduler = lr_scheduler.ReduceLROnPlateau(
-        optimizer, 'min', patience=args.lr_patience)
+    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=args.lr_patience)
 
     # loss function
     criterion = criteria.MaskedL1Loss()

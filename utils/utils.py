@@ -22,6 +22,7 @@ def parse_command():
     import argparse
     parser = argparse.ArgumentParser(description='FCRN')
     parser.add_argument('--decoder', default='upproj', type=str)
+    parser.add_argument('--resnet_layers', default=50, type=int)
     parser.add_argument('--resume',
                         default=None,
                         type=str, metavar='PATH',
@@ -56,10 +57,10 @@ def create_loader(args):
         exit(-1)
 
     valdir = os.path.join(Path.db_root_dir(args.dataset), 'val')
-    if os.path.exists(traindir):
-        print('Train dataset "{}" is existed!'.format(valdir))
+    if os.path.exists(valdir):
+        print('Val dataset "{}" is existed!'.format(valdir))
     else:
-        print('Train dataset "{}" is not existed!'.format(valdir))
+        print('Val dataset "{}" is not existed!'.format(valdir))
         exit(-1)
 
     if args.dataset == 'kitti':
@@ -95,7 +96,7 @@ def get_output_directory(args):
         return os.path.dirname(args.resume)
     else:
         save_dir_root = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-        save_dir_root = os.path.join(save_dir_root, 'result', args.decoder)
+        save_dir_root = os.path.join(save_dir_root, 'result', "resnet_" + args.resnet_layers + '_' + args.decoder)
         runs = sorted(glob.glob(os.path.join(save_dir_root, 'run_*')))
         run_id = int(runs[-1].split('_')[-1]) + 1 if runs else 0
 
