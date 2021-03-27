@@ -115,12 +115,6 @@ class MyDataloader(data.Dataset):
         else:
             raise (RuntimeError("transform not defined"))
 
-        print(rgb.shape)
-        print(depth.shape)
-
-        print(rgb_np.shape)
-        print(depth_np.shape)
-
         if self.modality == 'rgb':
             input_np = rgb_np
         elif self.modality == 'rgbd':
@@ -133,10 +127,6 @@ class MyDataloader(data.Dataset):
             input_tensor = input_tensor.unsqueeze(0)
         depth_tensor = to_tensor(depth_np)
         depth_tensor = depth_tensor.unsqueeze(0)
-
-        print('out')
-        print(input_tensor.size())
-        print(depth_tensor.size())
 
         return input_tensor, depth_tensor
 

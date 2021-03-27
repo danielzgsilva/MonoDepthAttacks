@@ -12,7 +12,8 @@ class NYUDataset(MyDataloader):
 
     def train_transform(self, rgb, depth):
         s = np.random.uniform(1.0, 1.5)  # random scaling
-        depth_np = depth / s
+        #depth_np = depth / s
+        depth_np = depth
         angle = np.random.uniform(-5.0, 5.0)  # random rotation degrees
         do_flip = np.random.uniform(0.0, 1.0) < 0.5  # random horizontal flip
 
