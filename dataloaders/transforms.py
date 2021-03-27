@@ -18,6 +18,8 @@ import warnings
 import scipy.ndimage.interpolation as itpl
 import scipy.misc as misc
 
+import cv2
+
 
 def _is_numpy_image(img):
     return isinstance(img, np.ndarray) and (img.ndim in {2, 3})
@@ -334,9 +336,9 @@ class Resize(object):
             PIL Image: Rescaled image.
         """
         if img.ndim == 3:
-            return misc.imresize(img, self.size, self.interpolation)
+            return cv2.resize(img, dsize=self.size)
         elif img.ndim == 2:
-            return misc.imresize(img, self.size, self.interpolation, 'F')
+            return cv2.resize(img, dsize=self.size)
         else:
             RuntimeError('img should be ndarray with 2 or 3 dimensions. Got {}'.format(img.ndim))
 
