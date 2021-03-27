@@ -96,7 +96,7 @@ def get_output_directory(args):
         return os.path.dirname(args.resume)
     else:
         save_dir_root = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-        save_dir_root = os.path.join(save_dir_root, 'result',  args.dataset + "_resnet_" + args.resnet_layers + '_' + args.decoder)
+        save_dir_root = os.path.join(save_dir_root, 'result',  args.dataset + "_resnet_" + str(args.resnet_layers) + '_' + args.decoder)
         runs = sorted(glob.glob(os.path.join(save_dir_root, 'run_*')))
         run_id = int(runs[-1].split('_')[-1]) + 1 if runs else 0
 
