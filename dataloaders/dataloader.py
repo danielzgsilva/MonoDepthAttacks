@@ -79,7 +79,7 @@ class MyDataloader(data.Dataset):
     def train_transform(self, rgb, depth):
         raise (RuntimeError("train_transform() is not implemented. "))
 
-    def val_transform(rgb, depth):
+    def val_transform(self, rgb, depth):
         raise (RuntimeError("val_transform() is not implemented."))
 
     def create_sparse_depth(self, rgb, depth):

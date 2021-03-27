@@ -33,7 +33,7 @@ class NYUDataset(MyDataloader):
     def val_transform(self, rgb, depth):
         depth_np = depth
         transform = transforms.Compose([
-            transforms.Resize(240.0 / iheight),
+            transforms.Resize((240, 320)),
             transforms.CenterCrop(self.output_size),
         ])
         rgb_np = transform(rgb)
