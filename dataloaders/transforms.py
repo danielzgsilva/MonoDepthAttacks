@@ -335,6 +335,8 @@ class Resize(object):
         Returns:
             PIL Image: Rescaled image.
         """
+        print('pre')
+        print(self.size)
         if img.ndim == 3:
             return cv2.resize(img, dsize=self.size)
         elif img.ndim == 2:
