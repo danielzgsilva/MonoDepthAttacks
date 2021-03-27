@@ -12,7 +12,7 @@ import time
 import os
 
 import torch
-import torch.nn as
+import torch.nn as nn
 from torch.optim import lr_scheduler
 
 from network import FCRN
