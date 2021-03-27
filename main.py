@@ -17,7 +17,7 @@ from torch.optim import lr_scheduler
 
 from network import FCRN
 from utils import criteria, utils
-from utils.metrics import AverageMeter, Result, create_loader
+from utils.metrics import AverageMeter, Result
 
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
@@ -35,7 +35,7 @@ def main():
     else:
         print("Let's use GPU ", torch.cuda.current_device())
 
-    train_loader, val_loader = create_loader(args)
+    train_loader, val_loader = utils.create_loader(args)
 
     # load model
     if args.resume:
