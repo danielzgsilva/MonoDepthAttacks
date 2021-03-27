@@ -10,9 +10,9 @@ class Path(object):
     @staticmethod
     def db_root_dir(database):
         if database == 'nyu':
-            return '/home/data/model/wangxin/nyudepthv2'
+            return '/home/cap6412.student27/Phase3/nyudepthv2'
         elif database == 'kitti':
-            return '/home/data/UnsupervisedDepth/wangixn/kitti'
+            return '/home/cap6412.student27/Phase3/kitti'
         else:
             print('Database {} not available.'.format(database))
             raise NotImplementedError
