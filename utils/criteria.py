@@ -26,6 +26,10 @@ class MaskedL1Loss(nn.Module):
         super(MaskedL1Loss, self).__init__()
 
     def forward(self, pred, target):
+        print('in loss')
+        print(pred.size())
+        print(target.size())
+
         assert pred.dim() == target.dim(), "inconsistent dimensions"
         valid_mask = (target > 0).detach()
         diff = target - pred

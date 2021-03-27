@@ -124,11 +124,7 @@ class MyDataloader(data.Dataset):
 
         #input_tensor = to_tensor(input_np)
 
-        while rgb_tensor.dim() < 3:
-            rgb_tensor = rgb_tensor.unsqueeze(0)
-
         #depth_tensor = to_tensor(depth_np)
-        depth_tensor = depth_tensor.unsqueeze(0)
 
         print('in loader')
         print(rgb_tensor.size())

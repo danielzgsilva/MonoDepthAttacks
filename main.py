@@ -157,6 +157,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
     for i, (input, target) in enumerate(train_loader):
 
+        print(input.size())
+        print(target.size())
         # itr_count += 1
         input, target = input.cuda(), target.cuda()
         # print('input size  = ', input.size())
