@@ -12,8 +12,7 @@ import time
 import os
 
 import torch
-import torch.nn as nn
-from tensorboardX import SummaryWriter
+import torch.nn as
 from torch.optim import lr_scheduler
 
 from network import FCRN
@@ -105,17 +104,15 @@ def main():
     if os.path.isdir(log_path):
         shutil.rmtree(log_path)
     os.makedirs(log_path)
-    logger = SummaryWriter(log_path)
 
     for epoch in range(start_epoch, args.epochs):
 
         # remember change of the learning rate
         for i, param_group in enumerate(optimizer.param_groups):
             old_lr = float(param_group['lr'])
-            logger.add_scalar('Lr/lr_' + str(i), old_lr, epoch)
 
-        train(train_loader, model, criterion, optimizer, epoch, logger)  # train for one epoch
-        result, img_merge = validate(val_loader, model, epoch, logger)  # evaluate on validation set
+        train(train_loader, model, criterion, optimizer, epoch)  # train for one epoch
+        result, img_merge = validate(val_loader, model, epoch)  # evaluate on validation set
 
         # remember best rmse and save checkpoint
         is_best = result.rmse < best_result.rmse
@@ -144,11 +141,9 @@ def main():
         # when rml doesn't fall, reduce learning rate
         scheduler.step(result.absrel)
 
-    logger.close()
-
 
 # train
-def train(train_loader, model, criterion, optimizer, epoch, logger):
+def train(train_loader, model, criterion, optimizer, epoch):
     average_meter = AverageMeter()
     model.train()  # switch to train mode
     end = time.time()
@@ -200,18 +195,12 @@ def train(train_loader, model, criterion, optimizer, epoch, logger):
                 epoch, i + 1, len(train_loader), data_time=data_time,
                 gpu_time=gpu_time, Loss=loss.item(), result=result, average=average_meter.average()))
             current_step = epoch * batch_num + i
-            logger.add_scalar('Train/RMSE', result.rmse, current_step)
-            logger.add_scalar('Train/rml', result.absrel, current_step)
-            logger.add_scalar('Train/Log10', result.lg10, current_step)
-            logger.add_scalar('Train/Delta1', result.delta1, current_step)
-            logger.add_scalar('Train/Delta2', result.delta2, current_step)
-            logger.add_scalar('Train/Delta3', result.delta3, current_step)
 
     avg = average_meter.average()
 
 
 # validation
-def validate(val_loader, model, epoch, logger):
+def validate(val_loader, model, epoch):
     average_meter = AverageMeter()
 
     model.eval()  # switch to evaluate mode
@@ -281,12 +270,6 @@ def validate(val_loader, model, epoch, logger):
           't_GPU={time:.3f}\n'.format(
         average=avg, time=avg.gpu_time))
 
-    logger.add_scalar('Test/rmse', avg.rmse, epoch)
-    logger.add_scalar('Test/Rel', avg.absrel, epoch)
-    logger.add_scalar('Test/log10', avg.lg10, epoch)
-    logger.add_scalar('Test/Delta1', avg.delta1, epoch)
-    logger.add_scalar('Test/Delta2', avg.delta2, epoch)
-    logger.add_scalar('Test/Delta3', avg.delta3, epoch)
     return avg, img_merge
 
 
