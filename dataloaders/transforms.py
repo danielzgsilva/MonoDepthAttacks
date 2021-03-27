@@ -400,6 +400,7 @@ class CenterCrop(object):
         h: Height of the cropped image.
         w: Width of the cropped image.
         """
+        print('crop before')
         print(img.shape)
         if not(_is_numpy_image(img)):
             raise TypeError('img should be ndarray. Got {}'.format(type(img)))
