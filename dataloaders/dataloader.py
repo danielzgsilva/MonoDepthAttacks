@@ -118,6 +118,9 @@ class MyDataloader(data.Dataset):
         print(rgb.shape)
         print(depth.shape)
 
+        print(rgb_np.shape)
+        print(depth_np.shape)
+
         if self.modality == 'rgb':
             input_np = rgb_np
         elif self.modality == 'rgbd':

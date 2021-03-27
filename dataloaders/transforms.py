@@ -335,8 +335,6 @@ class Resize(object):
         Returns:
             PIL Image: Rescaled image.
         """
-        print('pre')
-        print(self.size)
         if img.ndim == 3:
             return np.array(Image.fromarray(img).resize(size=self.size))
             #return cv2.resize(img, dsize=None, fy=self.size[0] / img.shape[1],  fx=self.size[1] / img.shape[2])
@@ -400,8 +398,7 @@ class CenterCrop(object):
         h: Height of the cropped image.
         w: Width of the cropped image.
         """
-        print('crop before')
-        print(img.shape)
+
         if not(_is_numpy_image(img)):
             raise TypeError('img should be ndarray. Got {}'.format(type(img)))
         if img.ndim == 3:
