@@ -23,7 +23,7 @@ from utils.metrics import AverageMeter, Result
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
 
-def main():
+def main()
     global args, best_result, output_directory
 
     # set random seed
@@ -31,6 +31,11 @@ def main():
 
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
+        print(torch.version.cuda)
+        print(torch.cuda.device_count())
+        print(torch.cuda.is_available())
+        print()
+
         args.batch_size = args.batch_size * torch.cuda.device_count()
     else:
         print("Let's use GPU ", torch.cuda.current_device())

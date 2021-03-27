@@ -2,6 +2,7 @@ import os
 import os.path
 import numpy as np
 import torch.utils.data as data
+import h5py
 import dataloaders.transforms as transforms
 
 IMG_EXTENSIONS = ['.h5', ]
@@ -52,7 +53,7 @@ class MyDataloader(data.Dataset):
     modality_names = ['rgb', 'rgbd', 'd']  # , 'g', 'gd'
     color_jitter = transforms.ColorJitter(0.4, 0.4, 0.4)
 
-    def __init__(self, root, type, sparsifier=None, modality='rgb'):
+    def __init__(self, root, type, sparsifier=None, modality='rgb', loader=h5_loader):
         classes, class_to_idx = find_classes(root)
         imgs = make_dataset(root, class_to_idx)
         assert len(imgs) > 0, "Found 0 images in subfolders of: " + root + "\n"
