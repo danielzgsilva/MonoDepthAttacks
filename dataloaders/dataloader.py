@@ -4,6 +4,7 @@ import numpy as np
 import torch.utils.data as data
 import h5py
 import dataloaders.transforms as transforms
+from pil import Image
 
 IMG_EXTENSIONS = ['.h5', ]
 
@@ -102,7 +103,7 @@ class MyDataloader(data.Dataset):
             index (int): Index
 
         Returns:
-            tuple: (rgb, depth) the raw data.
+            tuple: (rgb, depth) the raw data in pil format.
         """
         path, target = self.imgs[index]
         rgb, depth = self.loader(path)
@@ -111,24 +112,26 @@ class MyDataloader(data.Dataset):
     def __getitem__(self, index):
         rgb, depth = self.__getraw__(index)
         if self.transform is not None:
-            rgb_np, depth_np = self.transform(rgb, depth)
+            rgb_tensor, depth_tensor = self.transform(rgb, depth)
         else:
-            raise (RuntimeError("transform not defined"))
+            raise RuntimeError("transform not defined")
 
-        if self.modality == 'rgb':
-            input_np = rgb_np
-        elif self.modality == 'rgbd':
-            input_np = self.create_rgbd(rgb_np, depth_np)
-        elif self.modality == 'd':
-            input_np = self.create_sparse_depth(rgb_np, depth_np)
+        #if self.modality == 'rgb':
+        #    input_np = rgb_np
+        #elif self.modality == 'rgbd':
+        #    input_np = self.create_rgbd(rgb_np, depth_np)
+        #elif self.modality == 'd':
+        #    input_np = self.create_sparse_depth(rgb_np, depth_np)
 
-        input_tensor = to_tensor(input_np)
-        while input_tensor.dim() < 3:
-            input_tensor = input_tensor.unsqueeze(0)
-        depth_tensor = to_tensor(depth_np)
+        #input_tensor = to_tensor(input_np)
+
+        while rgb_tensor.dim() < 3:
+            rgb_tensor = rgb_tensor.unsqueeze(0)
+
+        #depth_tensor = to_tensor(depth_np)
         depth_tensor = depth_tensor.unsqueeze(0)
 
-        return input_tensor, depth_tensor
+        return rgb_tensor, depth_tensor
 
     def __len__(self):
         return len(self.imgs)
