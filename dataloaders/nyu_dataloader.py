@@ -19,7 +19,7 @@ class NYUDataset(MyDataloader):
         # perform 1st step of data augmentation
         transform = transforms.Compose([
             transforms.Rotate(angle),
-            transforms.Resize((int(self.output_size[0] * s + 0.5), int(self.output_size[1] * s + 0.5))),
+            #transforms.Resize((int(self.output_size[0] * s + 0.5), int(self.output_size[1] * s + 0.5))),
             transforms.CenterCrop(self.output_size),
             transforms.HorizontalFlip(do_flip)
         ])
