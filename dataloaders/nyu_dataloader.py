@@ -16,12 +16,12 @@ class NYUDataset(MyDataloader):
         # perform 1st step of data augmentation
         transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
             transforms.RandomRotation(degrees=5),
             transforms.CenterCrop(self.output_size),
             transforms.RandomHorizontalFlip(p=0.5),
             #transforms.ColorJitter(),
-            transforms.ToTensor()
+            transforms.ToTensor(),
+            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         ])
 
         rgb_tensor = transform(rgb)
