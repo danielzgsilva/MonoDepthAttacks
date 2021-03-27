@@ -110,10 +110,15 @@ class MyDataloader(data.Dataset):
 
     def __getitem__(self, index):
         rgb, depth = self.__getraw__(index)
+        print(rgb.shape)
+        print(depth.shape)
         if self.transform is not None:
             rgb_np, depth_np = self.transform(rgb, depth)
         else:
             raise (RuntimeError("transform not defined"))
+
+        print(rgb.shape)
+        print(depth.shape)
 
         if self.modality == 'rgb':
             input_np = rgb_np
