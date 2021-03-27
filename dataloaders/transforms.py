@@ -338,9 +338,9 @@ class Resize(object):
         print('pre')
         print(self.size)
         if img.ndim == 3:
-            return cv2.resize(img, dsize=self.size)
+            return cv2.resize(img, fy=self.size[0] / img.shape[1],  fx=self.size[1] / img.shape[2])
         elif img.ndim == 2:
-            return cv2.resize(img, dsize=self.size)
+            return cv2.resize(img, fy=self.size[0] / img.shape[1],  fx=self.size[1] / img.shape[2])
         else:
             RuntimeError('img should be ndarray with 2 or 3 dimensions. Got {}'.format(img.ndim))
 
