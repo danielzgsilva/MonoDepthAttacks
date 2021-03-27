@@ -23,7 +23,7 @@ from utils.metrics import AverageMeter, Result
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
 
-def main()
+def main():
     global args, best_result, output_directory
 
     # set random seed
