@@ -30,8 +30,10 @@ class NYUDataset(MyDataloader):
 
     def val_transform(self, rgb, depth):
         transform = transforms.Compose([
+            transforms.ToPILImage(),
             transforms.Resize((240, 320)),
             transforms.CenterCrop(self.output_size),
+            transforms.ToTensor()
         ])
 
         rgb_tensor = transform(rgb)

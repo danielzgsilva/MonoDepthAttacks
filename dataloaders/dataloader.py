@@ -126,10 +126,6 @@ class MyDataloader(data.Dataset):
 
         #depth_tensor = to_tensor(depth_np)
 
-        print('in loader')
-        print(rgb_tensor.size())
-        print(depth_tensor.size())
-
         return rgb_tensor, depth_tensor
 
     def __len__(self):
