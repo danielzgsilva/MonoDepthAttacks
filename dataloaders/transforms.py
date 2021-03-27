@@ -327,7 +327,6 @@ class Resize(object):
                (isinstance(size, collections.Iterable) and len(size) == 2)
         self.size = size
         self.interpolation = interpolation
-        print('resize size ', size)
 
     def __call__(self, img):
         """

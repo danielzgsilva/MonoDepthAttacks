@@ -110,8 +110,6 @@ class MyDataloader(data.Dataset):
 
     def __getitem__(self, index):
         rgb, depth = self.__getraw__(index)
-        print(rgb.shape)
-        print(depth.shape)
         if self.transform is not None:
             rgb_np, depth_np = self.transform(rgb, depth)
         else:
@@ -132,6 +130,9 @@ class MyDataloader(data.Dataset):
             input_tensor = input_tensor.unsqueeze(0)
         depth_tensor = to_tensor(depth_np)
         depth_tensor = depth_tensor.unsqueeze(0)
+
+        print(input_tensor.size())
+        print(depth_tensor.size())
 
         return input_tensor, depth_tensor
 
