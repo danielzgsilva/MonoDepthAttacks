@@ -58,7 +58,7 @@ def create_loader(args):
             exit(-1)
 
         train_set = kitti_dataloader.KITTIDataset(kitti_root, type='train')
-        val_set = kitti_dataloader.KITTIDataset(kitti_root, type='val')
+        val_set = kitti_dataloader.KITTIDataset(kitti_root, type='test')
 
         # sample 3200 pictures for validation from val set
         weights = [1 for i in range(len(val_set))]
