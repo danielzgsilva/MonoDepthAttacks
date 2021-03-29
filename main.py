@@ -248,8 +248,9 @@ def validate(val_loader, model, epoch):
             row = utils.merge_into_row(rgb, target, pred)
             img_merge = utils.add_row(img_merge, row)
         elif i == 8 * skip:
-            filename = output_directory + '/comparison_' + str(epoch) + '.png'
-            utils.save_image(img_merge, filename)
+            # filename = output_directory + '/comparison_' + str(epoch) + '.png'
+            # utils.save_image(img_merge, filename)
+            pass
 
         if (i + 1) % args.print_freq == 0:
             print('Test: [{0}/{1}]\t'
