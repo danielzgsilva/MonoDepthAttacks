@@ -55,7 +55,7 @@ class Kittiloader(object):
 
     def _check_path(self, filename, err_info):
         file_path = os.path.join(self.kitti_root, filename)
-        assert os.path.exists(file_path), err_info
+        assert os.path.exists(file_path), err_info + file_path
         return file_path
 
     def _read_depth(self, depth_path):
@@ -72,8 +72,8 @@ class Kittiloader(object):
         return depth
 
     def _read_data(self, item_files):
-        rgb_path = self._check_path(item_files['rgb'], "Cannot find RGB Image {}".format(item_files['rgb']))
-        depth_path = self._check_path(item_files['depth'], "Cannot find depth file {}".format(item_files['depth']))
+        rgb_path = self._check_path(item_files['rgb'], "Cannot find RGB Image ")
+        depth_path = self._check_path(item_files['depth'], "Cannot find depth file ")
 
         rgb = Image.open(rgb_path).convert('RGB')
         depth = self._read_depth(depth_path)
