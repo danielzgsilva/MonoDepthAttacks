@@ -98,7 +98,7 @@ class KITTIDataset(Dataset):
 
         if type == 'train':
             self.transform = self.train_transform
-        elif type == 'val':
+        elif type == 'test':
             self.transform = self.val_transform
         else:
             raise (RuntimeError("Invalid dataset type: " + type + "\n"
