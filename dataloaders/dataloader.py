@@ -100,7 +100,6 @@ class MyDataloader(data.Dataset):
         """
         Args:
             index (int): Index
-
         Returns:
             tuple: (rgb, depth) the raw data in pil format.
         """

@@ -49,29 +49,37 @@ def parse_command():
 
 
 def create_loader(args):
-    traindir = os.path.join(Path.db_root_dir(args.dataset), 'train')
-    if os.path.exists(traindir):
-        print('Train dataset "{}" is existed!'.format(traindir))
-    else:
-        print('Train dataset "{}" is not existed!'.format(traindir))
-        exit(-1)
-
-    valdir = os.path.join(Path.db_root_dir(args.dataset), 'val')
-    if os.path.exists(valdir):
-        print('Val dataset "{}" is existed!'.format(valdir))
-    else:
-        print('Val dataset "{}" is not existed!'.format(valdir))
-        exit(-1)
-
     if args.dataset == 'kitti':
-        train_set = kitti_dataloader.KITTIDataset(traindir, type='train')
-        val_set = kitti_dataloader.KITTIDataset(valdir, type='val')
+        kitti_root = Path.db_root_dir(args.dataset)
+        if os.path.exists(kitti_root):
+            print('kitti dataset "{}" exists!'.format(kitti_root))
+        else:
+            print('kitti dataset "{}" doesnt existed!'.format(kitti_root))
+            exit(-1)
+
+        train_set = kitti_dataloader.KITTIDataset(kitti_root, type='train')
+        val_set = kitti_dataloader.KITTIDataset(kitti_root, type='val')
 
         # sample 3200 pictures for validation from val set
         weights = [1 for i in range(len(val_set))]
         print('weights:', len(weights))
         sampler = torch.utils.data.WeightedRandomSampler(weights, num_samples=3200)
+
     elif args.dataset == 'nyu':
+        traindir = os.path.join(Path.db_root_dir(args.dataset), 'train')
+        if os.path.exists(traindir):
+            print('Train dataset "{}" exits!'.format(traindir))
+        else:
+            print('Train dataset "{}" doesnt existed!'.format(traindir))
+            exit(-1)
+
+        valdir = os.path.join(Path.db_root_dir(args.dataset), 'val')
+        if os.path.exists(valdir):
+            print('Val dataset "{}" exists!'.format(valdir))
+        else:
+            print('Val dataset "{}" doesnt existed!'.format(valdir))
+            exit(-1)
+
         train_set = nyu_dataloader.NYUDataset(traindir, type='train')
         val_set = nyu_dataloader.NYUDataset(valdir, type='val')
     else:
