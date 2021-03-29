@@ -61,11 +61,6 @@ def create_loader(args):
         train_set = kitti_dataloader.KITTIDataset(kitti_root, type='train')
         val_set = kitti_dataloader.KITTIDataset(kitti_root, type='test')
 
-        # sample 3200 pictures for validation from val set
-        weights = [1 for i in range(len(val_set))]
-        print('weights:', len(weights))
-        sampler = torch.utils.data.WeightedRandomSampler(weights, num_samples=3200)
-
     elif args.dataset == 'nyu':
         traindir = os.path.join(Path.db_root_dir(args.dataset), 'train')
         if os.path.exists(traindir):
@@ -92,7 +87,7 @@ def create_loader(args):
 
     if args.dataset == 'kitti':
         val_loader = torch.utils.data.DataLoader(
-            val_set, batch_size=args.batch_size, sampler=sampler, num_workers=args.workers, pin_memory=True)
+            val_set, batch_size=args.batch_size, num_workers=args.workers, pin_memory=True)
     else:
         val_loader = torch.utils.data.DataLoader(
             val_set, batch_size=1, shuffle=False, num_workers=args.workers, pin_memory=True)
