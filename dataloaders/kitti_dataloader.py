@@ -1,7 +1,6 @@
 import numpy as np
 import os
 from torch.utils.data import Dataset
-from dataloaders.dataloader import MyDataloader
 from PIL import Image
 from torchvision import transforms
 
