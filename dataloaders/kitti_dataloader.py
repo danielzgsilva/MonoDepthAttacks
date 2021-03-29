@@ -75,7 +75,7 @@ class Kittiloader(object):
         rgb_path = self._check_path(item_files['rgb'], "Cannot find RGB Image ")
         depth_path = self._check_path(item_files['depth'], "Cannot find depth file ")
 
-        rgb = Image.open(rgb_path).convert('RGB')
+        rgb = np.array(Image.open(rgb_path).convert('RGB'))
         depth = self._read_depth(depth_path)
 
         return rgb, depth
