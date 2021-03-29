@@ -30,9 +30,10 @@ def parse_command():
     parser.add_argument('-b', '--batch-size', default=16, type=int, help='mini-batch size (default: 4)')
     parser.add_argument('--epochs', default=15, type=int, metavar='N',
                         help='number of total epochs to run (default: 15)')
-    parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
+    parser.add_argument('--optim', default='sgd', type=str)
+    parser.add_argument('--lr', '--learning-rate', default=0.001, type=float,
                         metavar='LR', help='initial learning rate (default 0.0001)')
-    parser.add_argument('--lr_patience', default=2, type=int, help='Patience of LR scheduler. '
+    parser.add_argument('--lr_patience', default=3, type=int, help='Patience of LR scheduler. '
                                                                    'See documentation of ReduceLROnPlateau.')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum')

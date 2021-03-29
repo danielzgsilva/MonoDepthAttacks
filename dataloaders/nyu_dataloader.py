@@ -16,7 +16,7 @@ class NYUDataset(MyDataloader):
         # perform 1st step of data augmentation
         transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.RandomRotation(degrees=5),
+            transforms.RandomRotation(degrees=10),
             transforms.CenterCrop(self.output_size),
             transforms.RandomHorizontalFlip(p=0.5),
             #transforms.ColorJitter(),
