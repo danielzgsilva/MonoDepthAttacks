@@ -13,6 +13,7 @@ import os
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.optim import lr_scheduler
 
 from network import FCRN
@@ -135,6 +136,11 @@ def validate(val_loader, model):
                 pred = model(input)
             else:
                 _, pred = model(input)
+
+                if args.dataset == 'kitti':
+                    pred = F.interpolate(pred, size=(228, 912))
+                elif args.dataset == 'kitti':
+                    pred = F.interpolate(pred, size=(228, 304))
 
                 print(input.size())
                 print(pred.size())

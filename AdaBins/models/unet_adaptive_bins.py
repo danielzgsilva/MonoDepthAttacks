@@ -141,5 +141,7 @@ class UnetAdaptiveBins(nn.Module):
 if __name__ == '__main__':
     model = UnetAdaptiveBins.build(100)
     x = torch.rand(2, 3, 480, 640)
+    print(x.shape)
     bins, pred = model(x)
+    pred = F.interpolate(pred, size=(480, 640))
     print(bins.shape, pred.shape)
