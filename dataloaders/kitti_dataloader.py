@@ -94,7 +94,7 @@ class KITTIDataset(Dataset):
     def __init__(self, root, type):
         self.root = root
         self.type = type
-        self.output_size = (228, 912)
+        self.output_size = (114, 456)
 
         if type == 'train':
             self.transform = self.train_transform
