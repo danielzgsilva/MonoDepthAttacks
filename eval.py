@@ -136,6 +136,9 @@ def validate(val_loader, model):
             else:
                 _, pred = model(input)
 
+                print(input.size())
+                print(pred.size())
+
         torch.cuda.synchronize()
         gpu_time = time.time() - end
 
