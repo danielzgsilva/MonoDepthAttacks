@@ -26,6 +26,8 @@ from utils.metrics import AverageMeter, Result
 def main():
     global args, best_result, output_directory
 
+    print(torch.__version__)
+
     # set random seed
     torch.manual_seed(args.manual_seed)
 
