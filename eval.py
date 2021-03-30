@@ -67,7 +67,7 @@ def main():
         # clear memory
         del checkpoint
         # del model_dict
-        torch.cuda.empty_cache()
+
     elif args.model == "adabins":
         MIN_DEPTH = 1e-3
         MAX_DEPTH_NYU = 10
@@ -85,6 +85,9 @@ def main():
 
     else:
         assert(False, "{} model not supported".format(args.model))
+
+    torch.cuda.empty_cache()
+    model = model.cuda()
 
     # create directory path
     if args.eval_output_dir is not None:
