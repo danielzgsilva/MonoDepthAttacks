@@ -28,13 +28,15 @@ def parse_command():
                         type=str, metavar='PATH',
                         help='path to latest checkpoint (default: ./run/run_1/checkpoint-5.pth.tar)')
     parser.add_argument('-b', '--batch-size', default=8, type=int, help='mini-batch size (default: 4)')
+    parser.add_argument('--loss', default='l1', type=str)
     parser.add_argument('--epochs', default=15, type=int, metavar='N',
                         help='number of total epochs to run (default: 15)')
     parser.add_argument('--optim', default='sgd', type=str)
-    parser.add_argument('--lr', '--learning-rate', default=0.001, type=float,
+    parser.add_argument('--lr', '--learning-rate', default=0.0001, type=float,
                         metavar='LR', help='initial learning rate (default 0.0001)')
     parser.add_argument('--lr_patience', default=3, type=int, help='Patience of LR scheduler. '
                                                                    'See documentation of ReduceLROnPlateau.')
+    parser.add_argument('--scheduler', default='cyclic', type=str)
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum')
     parser.add_argument('--weight_decay', '--wd', default=0.0005, type=float,

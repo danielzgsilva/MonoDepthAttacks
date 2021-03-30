@@ -87,10 +87,22 @@ def main():
         model = nn.DataParallel(model).cuda()
 
     # when training, use reduceLROnPlateau to reduce learning rate
-    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=args.lr_patience)
+    if args.scheduler == 'plateau':
+        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=args.lr_patience)
+    elif args.scheduler == 'cyclic':
+        scheduler = lr_scheduler.CyclicLR(optimizer, base_lr=args.lr, max_lr=args.lr * 100)
+    elif args.scheduler == 'cosine':
+        scheduler = lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=2, eta_min=0.000001, T_mult=2)
+    else:
+        scheduler = None
 
     # loss function
-    criterion = criteria.MaskedL1Loss()
+    if args.loss == 'l1':
+        criterion = criteria.MaskedL1Loss()
+    elif args.loss == 'l2':
+        criterion = criteria.MaskedMSELoss()
+    else:
+        assert(False, '{} loss not supported'.format(args.loss))
 
     # create directory path
     output_directory = utils.get_output_directory(args)
@@ -149,7 +161,13 @@ def main():
         }, is_best, epoch, output_directory)
 
         # when rml doesn't fall, reduce learning rate
-        scheduler.step(result.absrel)
+        if scheduler is not None:
+            if args.scheduler == 'plateau':
+                scheduler.step(result.rmse)
+            elif args.scheduler == 'cyclic':
+                scheduler.step()
+            elif args.scheduler == 'cosine':
+                scheduler.step()
 
 
 # train
