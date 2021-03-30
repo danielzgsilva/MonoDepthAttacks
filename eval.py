@@ -139,7 +139,7 @@ def validate(val_loader, model):
 
                 if args.dataset == 'kitti':
                     pred = F.interpolate(pred, size=(228, 912))
-                elif args.dataset == 'kitti':
+                elif args.dataset == 'nyu':
                     pred = F.interpolate(pred, size=(228, 304))
 
                 print(input.size())
