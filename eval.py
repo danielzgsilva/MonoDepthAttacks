@@ -23,6 +23,7 @@ from utils.metrics import AverageMeter, Result
 from AdaBins.models import UnetAdaptiveBins
 from AdaBins import model_io
 
+from DPT.dpt.models import DPTDepthModel
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
@@ -83,7 +84,18 @@ def main():
             assert (False, "{} dataset not supported".format(args.dataset))
 
         model, _, _ = model_io.load_checkpoint(args.resume, model)
+    
+    elif args.model == "dpt":
+        model_path = "DPT/weights/dpt_hybrid-midas-501f0c75.pt"
+        attention_hooks = True
 
+        model = DPTDepthModel(
+            path=model_path,
+            backbone="vitb_rn50_384",
+            non_negative=True,
+            enable_attention_hooks=attention_hooks,
+        )
+        
     else:
         assert(False, "{} model not supported".format(args.model))
 

@@ -29,9 +29,14 @@ def parse_command():
                         default=None,
                         type=str, metavar='PATH',
                         help='path to latest checkpoint (default: ./run/run_1/checkpoint-5.pth.tar)')
+<<<<<<< Updated upstream
     parser.add_argument('-b', '--batch-size', default=8, type=int, help='mini-batch size (default: 4)')
     parser.add_argument('--loss', default='l1', type=str)
     parser.add_argument('--epochs', default=15, type=int, metavar='N',
+=======
+    parser.add_argument('-b', '--batch-size', default=4, type=int, help='mini-batch size (default: 4)')
+    parser.add_argument('--epochs', default=200, type=int, metavar='N',
+>>>>>>> Stashed changes
                         help='number of total epochs to run (default: 15)')
     parser.add_argument('--optim', default='sgd', type=str)
     parser.add_argument('--lr', '--learning-rate', default=0.0001, type=float,
@@ -49,6 +54,8 @@ def parse_command():
     parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
     parser.add_argument('--print-freq', '-p', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
+    parser.add_argument('--attack', '-a', default='pgd', type=str, help='Adversarial attack?')
+    parser.add_argument('--g_smooth', '-gs', default=False, type=bool, help='Add translational invariance to the attack')
     args = parser.parse_args()
     return args
 
