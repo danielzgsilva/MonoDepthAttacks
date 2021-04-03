@@ -153,8 +153,10 @@ def validate(val_loader, model):
                 # resize target to match adabins output size
                 if args.dataset == 'kitti':
                     target = F.interpolate(target, size=(114, 456))
+                    input = F.interpolate(input, size=(114, 456))
                 elif args.dataset == 'nyu':
                     target = F.interpolate(target, size=(114, 152))
+                    input = F.interpolate(input, size=(114, 152))
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
@@ -179,10 +181,6 @@ def validate(val_loader, model):
         elif (i < 8 * skip) and (i % skip == 0):
             row = utils.merge_into_row(rgb, target, pred)
             img_merge = utils.add_row(img_merge, row)
-        elif i == 8 * skip:
-            # filename = output_directory + '/comparison_' + str(epoch) + '.png'
-            # utils.save_image(img_merge, filename)
-            pass
 
         if (i + 1) % args.print_freq == 0:
             print('Test: [{0}/{1}]\t'
