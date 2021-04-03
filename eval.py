@@ -86,6 +86,7 @@ def main():
         model, _, _ = model_io.load_checkpoint(args.resume, model)
     
     elif args.model == "dpt":
+        # model_path = args.resume
         model_path = "DPT/weights/dpt_hybrid-midas-501f0c75.pt"
         attention_hooks = True
 
@@ -149,13 +150,11 @@ def validate(val_loader, model):
             else:
                 _, pred = model(input)
 
+                # resize target to match adabins output size
                 if args.dataset == 'kitti':
-                    pred = F.interpolate(pred, size=(228, 912))
+                    target = F.interpolate(target, size=(114, 456))
                 elif args.dataset == 'nyu':
-                    pred = F.interpolate(pred, size=(228, 304))
-
-                print(input.size())
-                print(pred.size())
+                    target = F.interpolate(target, size=(114, 152))
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
