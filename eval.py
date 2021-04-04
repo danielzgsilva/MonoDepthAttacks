@@ -44,6 +44,7 @@ def main():
         print("Let's use GPU ", torch.cuda.current_device())
 
     _, val_loader = utils.create_loader(args)
+    print("Kitti dataloader loaded")
     del _
 
     assert os.path.isfile(args.resume), \
@@ -96,7 +97,7 @@ def main():
             non_negative=True,
             enable_attention_hooks=attention_hooks,
         )
-        
+        print('model {} loaded'.format(model_path))
     else:
         assert(False, "{} model not supported".format(args.model))
 
@@ -146,21 +147,41 @@ def validate(val_loader, model):
         end = time.time()
         with torch.no_grad():
             if args.model != 'adabins':
-                pred = model(input)
+                input2 = input.clone()
+                if args.model == 'dpt':
+                    input2 = torch.nn.functional.interpolate(
+                            input2,
+                            size=(384, 384),
+                            mode="bicubic",
+                            align_corners=False)
+
+                pred = model(input2)
+                
             else:
                 _, pred = model(input)
 
-                # resize target to match adabins output size
-                if args.dataset == 'kitti':
-                    target = F.interpolate(target, size=(114, 456))
-                    input = F.interpolate(input, size=(114, 456))
-                elif args.dataset == 'nyu':
-                    target = F.interpolate(target, size=(114, 152))
-                    input = F.interpolate(input, size=(114, 152))
+                if args.model != 'dpt':
+                    # resize target to match adabins output size
+                    if args.dataset == 'kitti':
+                        target = F.interpolate(target, size=(114, 456))
+                        input = F.interpolate(input, size=(114, 456))
+                    elif args.dataset == 'nyu':
+                        target = F.interpolate(target, size=(114, 152))
+                        input = F.interpolate(input, size=(114, 152))
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
 
+        if args.model == 'dpt':
+            # pred = torch.unsqueeze(pred, 1)
+            pred = torch.nn.functional.interpolate(
+                        pred.unsqueeze(1),
+                        size=target.shape[2:],
+                        mode="bicubic",
+                        align_corners=False,
+                    )
+        
+            # print(input.shape, target.shape, pred.shape)
         # measure accuracy and record loss
         result = Result()
         result.evaluate(pred.data, target.data)
