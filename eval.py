@@ -125,7 +125,7 @@ def main():
 
     if img_merge is not None:
         img_filename = output_directory + '/eval_results_{}_{}.png'.format(args.model, args.dataset)
-        utils.save_image(img_merge, img_filename)
+	utils.save_image(img_merge, img_filename)
 
 # validation
 def validate(val_loader, model):
@@ -174,6 +174,7 @@ def validate(val_loader, model):
         if args.model == 'dpt':
             # pred = torch.unsqueeze(pred, 1)
             pred = post_process(pred, target)
+            print('pred {} \n target {}'.format(pred, target))
             # print(input.shape, target.shape, pred.shape)
         # measure accuracy and record loss
         result = Result()
@@ -187,7 +188,6 @@ def validate(val_loader, model):
             rgb = input[0]
             pred = pred[0]
             target = target[0]
-            print('pred {} \n target {}'.format(pred, target))
         else:
             rgb = input
 
@@ -225,8 +225,10 @@ def validate(val_loader, model):
 def post_process(depth, target, bits=1):
     depth_min = torch.min(depth)
     depth_max = torch.max(depth)
-
-    depth = 255 * (depth - depth_min) / (depth_max - depth_min)
+    depth[depth < 0.5] = 0
+    depth = (255 - (255 * (depth - depth_min) / (depth_max - depth_min))) / 10
+    # depth = (depth - depth_min) / (depth_max - depth_min)
+    F.relu(depth, inplace=True)
     depth = torch.nn.functional.interpolate(
                         depth.unsqueeze(1),
                         size=target.shape[2:],
