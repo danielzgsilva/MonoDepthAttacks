@@ -249,7 +249,7 @@ def validate(val_loader, model, attacker):
 
 
 def get_adversary(data, target, attacker=None):
-    if attacker == 'mifgsm':
+    if attacker is not None:
         pert_image = attacker(data, target)
     else:
         pert_image = data
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     max_perturb = 10.0
     iterations = 20
     alpha = 1.0
-    TI = True
+    TI = False
     k = 5
 
     mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
