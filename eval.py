@@ -47,9 +47,10 @@ def main():
     print("Kitti dataloader loaded")
     del _
 
-    assert os.path.isfile(args.resume), \
-        "=> no checkpoint found at '{}'".format(args.resume)
-    print("=> loading checkpoint '{}'".format(args.resume))
+    if args.resume is not None:
+        assert os.path.isfile(args.resume), \
+            "=> no checkpoint found at '{}'".format(args.resume)
+        print("=> loading checkpoint '{}'".format(args.resume))
 
     if args.model == 'resnet':
         checkpoint = torch.load(args.resume)
