@@ -55,6 +55,9 @@ class MIFGSM(nn.Module):
         labels = labels.clone().detach().to(self.device)
         # labels = self._transform_label(images, labels)
 
+        print(images.size())
+        print(labels.size())
+
         momentum = torch.zeros_like(images).detach().to(self.device)
 
         adv_images = images.clone().detach()
