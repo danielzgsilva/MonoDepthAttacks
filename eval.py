@@ -113,7 +113,7 @@ def main():
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    eval_txt = os.path.join(output_directory, 'eval_results_{}_{}.txt'.format(args.model, args.dataset))
+    eval_txt = os.path.join(output_directory, 'eval_results_{}.txt'.format(args.model))
 
     result, img_merge = validate(val_loader, model)  # evaluate on validation set
 
@@ -124,7 +124,7 @@ def main():
                        result.delta3, result.gpu_time))
 
     if img_merge is not None:
-        img_filename = output_directory + '/eval_results_{}_{}.png'.format(args.model, args.dataset)
+        img_filename = output_directory + '/eval_results.png'
         utils.save_image(img_merge, img_filename)
 
 # validation
@@ -160,13 +160,14 @@ def validate(val_loader, model):
             else:
                 _, pred = model(input)
 
-                # resize target to match adabins output size
-                if args.dataset == 'kitti':
-                    target = F.interpolate(target, size=(114, 456))
-                    input = F.interpolate(input, size=(114, 456))
-                elif args.dataset == 'nyu':
-                    target = F.interpolate(target, size=(114, 152))
-                    input = F.interpolate(input, size=(114, 152))
+                if args.model != 'dpt':
+                    # resize target to match adabins output size
+                    if args.dataset == 'kitti':
+                        target = F.interpolate(target, size=(114, 456))
+                        input = F.interpolate(input, size=(114, 456))
+                    elif args.dataset == 'nyu':
+                        target = F.interpolate(target, size=(114, 152))
+                        input = F.interpolate(input, size=(114, 152))
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
@@ -175,7 +176,6 @@ def validate(val_loader, model):
             # pred = torch.unsqueeze(pred, 1)
             pred = post_process(pred, target)
             # print(input.shape, target.shape, pred.shape)
-
         # measure accuracy and record loss
         result = Result()
         result.evaluate(pred.data, target.data)
@@ -188,6 +188,7 @@ def validate(val_loader, model):
             rgb = input[0]
             pred = pred[0]
             target = target[0]
+            print('pred {} \n target {}'.format(pred, target))
         else:
             rgb = input
 
@@ -226,9 +227,7 @@ def post_process(depth, target, bits=1):
     depth_min = torch.min(depth)
     depth_max = torch.max(depth)
 
-    max_val = (2 ** (8 * bits)) - 1
-
-    depth = max_val * (depth - depth_min) / (depth_max - depth_min)
+    depth = 255 * (depth - depth_min) / (depth_max - depth_min)
     depth = torch.nn.functional.interpolate(
                         depth.unsqueeze(1),
                         size=target.shape[2:],
