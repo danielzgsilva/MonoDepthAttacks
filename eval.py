@@ -165,11 +165,13 @@ def validate(val_loader, model):
 
                 # resize target to match adabins output size
                 if args.dataset == 'kitti':
-                    target = F.interpolate(target, size=(114, 456))
-                    input = F.interpolate(input, size=(114, 456))
+                    #target = F.interpolate(target, size=(114, 456), mode='bilinear')
+                    #input = F.interpolate(input, size=(114, 456), mode='bilinear')
+                    pred = F.interpolate(pred, size=(114, 456), mode='bilinear')
                 elif args.dataset == 'nyu':
-                    target = F.interpolate(target, size=(640, 480))
-                    input = F.interpolate(input, size=(640, 480))
+                    #target = F.interpolate(target, size=(640, 480))
+                    #input = F.interpolate(input, size=(640, 480), mode='bilinear')
+                    pred = F.interpolate(pred, size=(640, 480), mode='bilinear')
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
