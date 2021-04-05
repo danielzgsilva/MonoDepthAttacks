@@ -168,8 +168,8 @@ def validate(val_loader, model):
                     target = F.interpolate(target, size=(114, 456))
                     input = F.interpolate(input, size=(114, 456))
                 elif args.dataset == 'nyu':
-                    target = F.interpolate(target, size=(114, 152))
-                    input = F.interpolate(input, size=(114, 152))
+                    target = F.interpolate(target, size=(640, 480))
+                    input = F.interpolate(input, size=(640, 480))
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
