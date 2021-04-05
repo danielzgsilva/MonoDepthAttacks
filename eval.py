@@ -174,13 +174,7 @@ def validate(val_loader, model):
 
         if args.model == 'dpt':
             # pred = torch.unsqueeze(pred, 1)
-            pred = torch.nn.functional.interpolate(
-                        pred.unsqueeze(1),
-                        size=target.shape[2:],
-                        mode="bicubic",
-                        align_corners=False,
-                    )
-        
+            pred = post_process(pred, target)
             # print(input.shape, target.shape, pred.shape)
         # measure accuracy and record loss
         result = Result()
@@ -228,6 +222,19 @@ def validate(val_loader, model):
 
     return avg, img_merge
 
+def post_process(depth, target, bits=1):
+    depth_min = torch.min(depth)
+    depth_max = torch.max(depth)
+
+    max_val = (2 ** (8 * bits)) - 1
+
+    depth = max_val * (depth - depth_min) / (depth_max - depth_min)
+    depth = torch.nn.functional.interpolate(
+                        depth.unsqueeze(1),
+                        size=target.shape[2:],
+                        mode="bicubic",
+                        align_corners=False,)
+    return depth
 
 if __name__ == '__main__':
     args = utils.parse_command()
