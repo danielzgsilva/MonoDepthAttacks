@@ -22,7 +22,7 @@ def parse_command():
     import argparse
     parser = argparse.ArgumentParser(description='FCRN')
     parser.add_argument('--model', default='resnet', type=str)
-    parser.add_argument('--attack', default=None, type=str)
+    parser.add_argument('--attack', '-a', default=None, type=str)
     parser.add_argument('--eval_output_dir', default=None, type=str)
     parser.add_argument('--decoder', default='upproj', type=str)
     parser.add_argument('--resnet_layers', default=50, type=int)
@@ -50,7 +50,6 @@ def parse_command():
     parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
     parser.add_argument('--print-freq', '-p', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
-    parser.add_argument('--attack', '-a', default='pgd', type=str, help='Adversarial attack?')
     parser.add_argument('--g_smooth', '-gs', default=False, type=bool, help='Add translational invariance to the attack')
     args = parser.parse_args()
     return args
