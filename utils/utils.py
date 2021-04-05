@@ -13,7 +13,7 @@ from PIL import Image
 from dataloaders import kitti_dataloader, nyu_dataloader
 from dataloaders.path import Path
 
-cmap = plt.cm.jet
+cmap = plt.cm.get_cmap('jet_r')
 
 
 def parse_command():
