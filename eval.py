@@ -169,9 +169,9 @@ def validate(val_loader, model):
                     #input = F.interpolate(input, size=(114, 456), mode='bilinear')
                     pred = F.interpolate(pred, size=(114, 456), mode='bilinear')
                 elif args.dataset == 'nyu':
-                    #target = F.interpolate(target, size=(640, 480))
-                    #input = F.interpolate(input, size=(640, 480), mode='bilinear')
-                    pred = F.interpolate(pred, size=(640, 480), mode='bilinear')
+                    #target = F.interpolate(target, size=(480, 640))
+                    #input = F.interpolate(input, size=(480, 640), mode='bilinear')
+                    pred = F.interpolate(pred, size=(480, 640), mode='bilinear')
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
