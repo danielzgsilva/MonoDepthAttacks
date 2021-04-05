@@ -143,6 +143,9 @@ def validate(val_loader, model):
         torch.cuda.synchronize()
         data_time = time.time() - end
 
+        print(target.size())
+        print(input.size())
+
         # compute output
         end = time.time()
         with torch.no_grad():
