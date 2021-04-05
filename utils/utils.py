@@ -22,6 +22,7 @@ def parse_command():
     import argparse
     parser = argparse.ArgumentParser(description='FCRN')
     parser.add_argument('--model', default='resnet', type=str)
+    parser.add_argument('--attack', default=None, type=str)
     parser.add_argument('--eval_output_dir', default=None, type=str)
     parser.add_argument('--decoder', default='upproj', type=str)
     parser.add_argument('--resnet_layers', default=50, type=int)

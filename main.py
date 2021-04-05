@@ -103,6 +103,8 @@ def main():
         criterion = criteria.MaskedL1Loss()
     elif args.loss == 'l2':
         criterion = criteria.MaskedMSELoss()
+    elif args.loss == 'berhu':
+        criterion = criteria.berHuLoss()
     else:
         assert(False, '{} loss not supported'.format(args.loss))
 

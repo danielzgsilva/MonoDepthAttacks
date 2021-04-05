@@ -25,6 +25,8 @@ from AdaBins import model_io
 
 from DPT.dpt.models import DPTDepthModel
 
+from MIFGSM import MIFGSM
+
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
 
@@ -105,6 +107,19 @@ def main():
     torch.cuda.empty_cache()
     model = model.cuda()
 
+    attacker = None
+    if args.attack == 'mifgsm':
+        print('attacking with {}'.format(args.attack))
+        attacker = MIFGSM(model, "cuda:0", args.loss,
+                          eps=mifgsm_params['eps'],
+                          steps=mifgsm_params['steps'],
+                          decay=mifgsm_params['decay'],
+                          alpha=mifgsm_params['alpha'],
+                          TI=mifgsm_params['TI'],
+                          k_=mifgsm_params['k'])
+    else:
+        print('no attack')
+
     # create directory path
     if args.eval_output_dir is not None:
         output_directory = args.eval_output_dir
@@ -114,9 +129,11 @@ def main():
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    eval_txt = os.path.join(output_directory, 'eval_results_{}_{}.txt'.format(args.model, args.dataset))
+    eval_txt = os.path.join(output_directory, 'eval_results_{}_{}_{}.txt'.format(
+                                                                        args.model, args.dataset, args.attack))
 
-    result, img_merge = validate(val_loader, model)  # evaluate on validation set
+    # evaluate on validation set
+    result, img_merge = validate(val_loader, model, attacker)
 
     with open(eval_txt, 'w') as txtfile:
         txtfile.write(
@@ -125,11 +142,13 @@ def main():
                        result.delta3, result.gpu_time))
 
     if img_merge is not None:
-        img_filename = output_directory + '/eval_results_{}_{}.png'.format(args.model, args.dataset)
+        img_filename = output_directory + '/eval_results_{}_{}_{}.png'.format(
+                                                                    args.model, args.dataset, args.attack)
         utils.save_image(img_merge, img_filename)
 
+
 # validation
-def validate(val_loader, model):
+def validate(val_loader, model, attacker):
     average_meter = AverageMeter()
 
     model.eval()  # switch to evaluate mode
@@ -141,11 +160,11 @@ def validate(val_loader, model):
     for i, (input, target) in enumerate(val_loader):
 
         input, target = input.cuda(), target.cuda()
+
+        input = get_adversary(input, target, attacker)
+
         torch.cuda.synchronize()
         data_time = time.time() - end
-
-        print(target.size())
-        print(input.size())
 
         # compute output
         end = time.time()
@@ -228,6 +247,16 @@ def validate(val_loader, model):
 
     return avg, img_merge
 
+
+def get_adversary(data, target, attacker=None):
+    if attacker == 'mifgsm':
+        pert_image = attacker(data, target)
+    else:
+        pert_image = data
+
+    return pert_image
+
+
 def post_process(depth, target, bits=1):
     depth_min = torch.min(depth)
     depth_max = torch.max(depth)
@@ -240,7 +269,16 @@ def post_process(depth, target, bits=1):
                         align_corners=False,)
     return depth
 
+
 if __name__ == '__main__':
+    max_perturb = 10.0
+    iterations = 20
+    alpha = 1.0
+    TI = True
+    k = 5
+
+    mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
+
     args = utils.parse_command()
     print(args)
 
