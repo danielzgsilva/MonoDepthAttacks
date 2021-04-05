@@ -187,7 +187,7 @@ def validate(val_loader, model, attacker):
                 if args.dataset == 'kitti':
                     #target = F.interpolate(target, size=(114, 456), mode='bilinear')
                     #input = F.interpolate(input, size=(114, 456), mode='bilinear')
-                    pred = F.interpolate(pred, size=(114, 456), mode='bilinear')
+                    pred = F.interpolate(pred, size=(228, 912), mode='bilinear')
                 elif args.dataset == 'nyu':
                     #target = F.interpolate(target, size=(480, 640))
                     #input = F.interpolate(input, size=(480, 640), mode='bilinear')
