@@ -113,7 +113,7 @@ def main():
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    eval_txt = os.path.join(output_directory, 'eval_results_{}.txt'.format(args.model))
+    eval_txt = os.path.join(output_directory, 'eval_results_{}_{}.txt'.format(args.model, args.dataset))
 
     result, img_merge = validate(val_loader, model)  # evaluate on validation set
 
@@ -124,7 +124,7 @@ def main():
                        result.delta3, result.gpu_time))
 
     if img_merge is not None:
-        img_filename = output_directory + '/eval_results.png'
+        img_filename = output_directory + '/eval_results_{}_{}.png'.format(args.model, args.dataset)
         utils.save_image(img_merge, img_filename)
 
 # validation
@@ -160,14 +160,13 @@ def validate(val_loader, model):
             else:
                 _, pred = model(input)
 
-                if args.model != 'dpt':
-                    # resize target to match adabins output size
-                    if args.dataset == 'kitti':
-                        target = F.interpolate(target, size=(114, 456))
-                        input = F.interpolate(input, size=(114, 456))
-                    elif args.dataset == 'nyu':
-                        target = F.interpolate(target, size=(114, 152))
-                        input = F.interpolate(input, size=(114, 152))
+                # resize target to match adabins output size
+                if args.dataset == 'kitti':
+                    target = F.interpolate(target, size=(114, 456))
+                    input = F.interpolate(input, size=(114, 456))
+                elif args.dataset == 'nyu':
+                    target = F.interpolate(target, size=(114, 152))
+                    input = F.interpolate(input, size=(114, 152))
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
