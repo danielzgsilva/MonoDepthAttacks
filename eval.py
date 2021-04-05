@@ -273,8 +273,8 @@ def post_process(depth, target, bits=1):
 
 
 if __name__ == '__main__':
-    max_perturb = 10.0
-    iterations = 20
+    max_perturb = 5.0
+    iterations = 10
     alpha = 1.0
     TI = False
     k = 5
