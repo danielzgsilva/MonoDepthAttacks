@@ -64,8 +64,8 @@ def create_loader(args):
             print('kitti dataset "{}" doesnt existed!'.format(kitti_root))
             exit(-1)
 
-        train_set = kitti_dataloader.KITTIDataset(kitti_root, type='train')
-        val_set = kitti_dataloader.KITTIDataset(kitti_root, type='test')
+        train_set = kitti_dataloader.KITTIDataset(kitti_root, type='train', model=args.model)
+        val_set = kitti_dataloader.KITTIDataset(kitti_root, type='test', model=args.model)
 
     elif args.dataset == 'nyu':
         traindir = os.path.join(Path.db_root_dir(args.dataset), 'train')

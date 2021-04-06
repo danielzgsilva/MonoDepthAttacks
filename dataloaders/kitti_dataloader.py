@@ -91,7 +91,7 @@ class Kittiloader(object):
 
 
 class KITTIDataset(Dataset):
-    def __init__(self, root, type, model='adabins'):
+    def __init__(self, root, type, model='resnet'):
         self.root = root
         self.type = type
         self.model = model

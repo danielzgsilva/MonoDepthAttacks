@@ -25,7 +25,7 @@ from AdaBins import model_io
 
 from DPT.dpt.models import DPTDepthModel
 
-from MIFGSM import MIFGSM
+from attacks.MIFGSM import MIFGSM
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
@@ -90,17 +90,15 @@ def main():
         model, _, _ = model_io.load_checkpoint(args.resume, model)
     
     elif args.model == "dpt":
-        # model_path = args.resume
-        model_path = "DPT/weights/dpt_hybrid-midas-501f0c75.pt"
         attention_hooks = True
 
         model = DPTDepthModel(
-            path=model_path,
+            path=args.resume,
             backbone="vitb_rn50_384",
             non_negative=True,
             enable_attention_hooks=attention_hooks,
         )
-        print('model {} loaded'.format(model_path))
+        print('model {} loaded'.format(args.resume))
     else:
         assert(False, "{} model not supported".format(args.model))
 
@@ -116,7 +114,8 @@ def main():
                           decay=mifgsm_params['decay'],
                           alpha=mifgsm_params['alpha'],
                           TI=mifgsm_params['TI'],
-                          k_=mifgsm_params['k'])
+                          k_=mifgsm_params['k'],
+                          test=args.model)
     else:
         print('no attack')
 
@@ -160,8 +159,21 @@ def validate(val_loader, model, attacker):
     for i, (input, target) in enumerate(val_loader):
 
         input, target = input.cuda(), target.cuda()
+        input_clone = input.clone(); target_clone = target.clone()
 
-        input = get_adversary(input, target, attacker)
+        if args.model == 'dpt':
+            input_clone = torch.nn.functional.interpolate(
+                    input_clone,
+                    size=(384, 384),
+                    mode="bicubic",
+                    align_corners=False)
+            target_clone = torch.nn.functional.interpolate(
+                    target_clone,
+                    size=(384, 384),
+                    mode="bicubic",
+                    align_corners=False)
+
+        adv_input = get_adversary(input_clone, target_clone, attacker)
 
         torch.cuda.synchronize()
         data_time = time.time() - end
@@ -169,38 +181,19 @@ def validate(val_loader, model, attacker):
         # compute output
         end = time.time()
         with torch.no_grad():
-            if args.model != 'adabins':
-                input2 = input.clone()
-                if args.model == 'dpt':
-                    input2 = torch.nn.functional.interpolate(
-                            input2,
-                            size=(384, 384),
-                            mode="bicubic",
-                            align_corners=False)
-
-                pred = model(input2)
-                
+            if args.model == 'adabins':
+                _, pred = model(adv_input)
             else:
-                _, pred = model(input)
+                pred = model(adv_input)
 
-                # resize target to match adabins output size
-                if args.dataset == 'kitti':
-                    #target = F.interpolate(target, size=(114, 456), mode='bilinear')
-                    #input = F.interpolate(input, size=(114, 456), mode='bilinear')
-                    pred = F.interpolate(pred, size=(228, 912), mode='bilinear')
-                elif args.dataset == 'nyu':
-                    #target = F.interpolate(target, size=(480, 640))
-                    #input = F.interpolate(input, size=(480, 640), mode='bilinear')
-                    pred = F.interpolate(pred, size=(480, 640), mode='bilinear')
+        input, target, pred = post_process(input, target, pred, args.model)
+        # print('pred {} \n target {}'.format(pred, target))
+        # print(input.shape, target.shape, pred.shape)
+
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
 
-        if args.model == 'dpt':
-            # pred = torch.unsqueeze(pred, 1)
-            pred = post_process(pred, target)
-            print('pred {} \n target {}'.format(pred, target))
-            # print(input.shape, target.shape, pred.shape)
         # measure accuracy and record loss
         result = Result()
         result.evaluate(pred.data, target.data)
@@ -211,8 +204,8 @@ def validate(val_loader, model, attacker):
         # save 8 images for visualization
         if args.dataset == 'kitti':
             rgb = input[0]
-            pred = pred[0]
             target = target[0]
+            pred = pred[0]
         else:
             rgb = input
 
@@ -257,19 +250,36 @@ def get_adversary(data, target, attacker=None):
     return pert_image
 
 
-def post_process(depth, target, bits=1):
-    depth_min = torch.min(depth)
-    depth_max = torch.max(depth)
-    depth[depth < 0.5] = 0
-    depth = (255 - (255 * (depth - depth_min) / (depth_max - depth_min))) / 25.5
-    # depth = (depth - depth_min) / (depth_max - depth_min)
-    F.relu(depth, inplace=True)
-    depth = torch.nn.functional.interpolate(
-                        depth.unsqueeze(1),
-                        size=target.shape[2:],
-                        mode="bicubic",
-                        align_corners=False,)
-    return depth
+def post_process(input, target, depth, model=None, bits=1):
+    if model == 'adabins':
+        # resize target to match adabins output size
+        if args.dataset == 'kitti':
+            #target = F.interpolate(target, size=(114, 456), mode='bilinear')
+            #input = F.interpolate(input, size=(114, 456), mode='bilinear')
+            depth = F.interpolate(depth, size=(228, 912), mode='bilinear')
+        elif args.dataset == 'nyu':
+            #target = F.interpolate(target, size=(480, 640))
+            #input = F.interpolate(input, size=(480, 640), mode='bilinear')
+            depth = F.interpolate(depth, size=(480, 640), mode='bilinear')
+    
+    elif model == 'dpt':
+        depth_min = torch.min(depth)
+        depth_max = torch.max(depth)
+
+        # TODO What am I even doing?
+        depth[depth < 0.5] = 0
+        depth = (255 - (255 * (depth - depth_min) / (depth_max - depth_min))) / 10
+        F.relu(depth, inplace=True)
+
+        depth = torch.nn.functional.interpolate(
+                            depth.unsqueeze(1),
+                            size=target.shape[2:],
+                            mode="bicubic",
+                            align_corners=False,)
+    else:
+        pass
+
+    return input, target, depth
 
 
 if __name__ == '__main__':

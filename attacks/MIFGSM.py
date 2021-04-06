@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import numpy as np
-from translation_invariance import GaussianSmooth
+from attacks.translation_invariance import GaussianSmooth
 from utils import criteria
 
 
@@ -24,7 +24,7 @@ class MIFGSM(nn.Module):
 
     """
 
-    def __init__(self, model, device, loss, eps=6.0, steps=5, decay=1.0, mean=0.5, std=0.5, alpha=1, TI=False, k_=0):
+    def __init__(self, model, device, loss, eps=6.0, steps=5, decay=1.0, mean=0.5, std=0.5, alpha=1, TI=False, k_=0, test=None):
         super(MIFGSM, self).__init__()
         self.model = model
         self.eps = (eps / 255.0) / std
@@ -34,6 +34,7 @@ class MIFGSM(nn.Module):
         self._targeted = -1
         self.alpha = alpha
         self.TI = TI
+        self.test = test
 
         if loss == 'l1':
             self.loss = criteria.MaskedL1Loss()
@@ -55,8 +56,8 @@ class MIFGSM(nn.Module):
         labels = labels.clone().detach().to(self.device)
         # labels = self._transform_label(images, labels)
 
-        print(images.size())
-        print(labels.size())
+        # print(images.size())
+        # print(labels.size())
 
         momentum = torch.zeros_like(images).detach().to(self.device)
 
@@ -64,8 +65,15 @@ class MIFGSM(nn.Module):
         
         for i in range(self.steps):
             adv_images.requires_grad = True
-            outputs = self.model(adv_images)
-
+            if self.test == 'dpt':
+                outputs = self.model(adv_images)
+                outputs = torch.unsqueeze(outputs, 1)
+            elif self.test == 'adabins':
+                _, outputs = self.model(adv_images)
+                labels = F.interpolate(labels, size=(114, 456), mode='bilinear')
+            else:
+                outputs = self.model(adv_images)
+            # print(outputs.shape, labels.shape)
             cost = self._targeted * self.loss(outputs, labels)
             
             grad = torch.autograd.grad(cost, adv_images, 
