@@ -26,6 +26,7 @@ from AdaBins import model_io
 from DPT.dpt.models import DPTDepthModel
 
 from attacks.MIFGSM import MIFGSM
+from attacks.pgd import PGD
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
@@ -116,6 +117,15 @@ def main():
                           TI=mifgsm_params['TI'],
                           k_=mifgsm_params['k'],
                           test=args.model)
+    if args.attack =='pgd':
+        print('attacking with {}'.format(args.attack))
+        attacker = PGD(model, "cuda:0", args.loss,
+                        norm=pgd_params['norm'],
+                        eps=pgd_params['eps'],
+                        alpha=pgd_params['alpha'],
+                        iters=pgd_params['iterations'],
+                        TI=pgd_params['TI'],
+                        test=args.model)
     else:
         print('no attack')
 
@@ -290,6 +300,7 @@ if __name__ == '__main__':
     k = 5
 
     mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
+    pgd_params = {'norm': 'inf', 'eps': max_perturb, 'alpha': alpha, 'iterations': iterations, 'TI': TI}
 
     args = utils.parse_command()
     print(args)
