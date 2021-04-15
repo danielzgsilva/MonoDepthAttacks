@@ -96,7 +96,10 @@ class KITTIDataset(Dataset):
         self.type = type
         self.model = model
 
-        self.output_size = (228, 912)
+        if self.model == 'dpt':
+            self.output_size = (352, 1216)
+        else:    
+            self.output_size = (228, 912)
 
         if type == 'train':
             self.transform = self.train_transform
@@ -125,6 +128,17 @@ class KITTIDataset(Dataset):
         return rgb_tensor, depth_tensor
 
     def val_transform(self, rgb, depth):
+        if self.model == 'dpt':
+            height, width, _ = rgb.shape
+            top = height - 352
+            left = (width - 1216) // 2
+            rgb = rgb[top : top + 352, left : left + 1216, :]
+
+            height, width = depth.shape
+            top = height - 352
+            left = (width - 1216) // 2
+            depth = depth[top : top + 352, left : left + 1216]
+
         transform = transforms.Compose([
             transforms.ToPILImage(),
             transforms.CenterCrop(self.output_size),

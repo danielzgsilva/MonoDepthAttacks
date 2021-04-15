@@ -31,7 +31,6 @@ Segmentation:
 
    The code was tested with Python 3.7, PyTorch 1.8.0, OpenCV 4.5.1, and timm 0.4.5
 
-    
 ### Usage 
 
 1) Place one or more input images in the folder `input`.
@@ -48,9 +47,21 @@ Segmentation:
     python run_segmentation.py
     ```
 
-3) The results are written to the folder `output_monodepth` and `output_segmentation`, respectively.
+3) The results are written to the folder `output_monodepth` and `output_semseg`, respectively.
 
 Use the flag `-t` to switch between different models. Possible options are `dpt_hybrid` (default) and `dpt_large`.
+
+
+**Additional models:**
+
+- Monodepth finetuned on KITTI: [dpt_hybrid_kitti-cb926ef4.pt](https://github.com/intel-isl/DPT/releases/download/1_0/dpt_hybrid_kitti-cb926ef4.pt) 
+- Monodepth finetuned on NYUv2: [dpt_hybrid_nyu-2ce69ec7.pt](https://github.com/intel-isl/DPT/releases/download/1_0/dpt_hybrid_nyu-2ce69ec7.pt)
+
+Run with 
+
+```shell
+python run_monodepth -t [dpt_hybrid_kitti|dpt_hybrid_nyu] 
+```
 
 
 ### Citation

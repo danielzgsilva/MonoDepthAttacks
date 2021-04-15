@@ -82,8 +82,8 @@ def create_loader(args):
             print('Val dataset "{}" doesnt existed!'.format(valdir))
             exit(-1)
 
-        train_set = nyu_dataloader.NYUDataset(traindir, type='train')
-        val_set = nyu_dataloader.NYUDataset(valdir, type='val')
+        train_set = nyu_dataloader.NYUDataset(traindir, type='train', model=args.model)
+        val_set = nyu_dataloader.NYUDataset(valdir, type='val', model=args.model)
     else:
         print('no dataset named as ', args.dataset)
         exit(-1)

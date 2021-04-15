@@ -93,12 +93,23 @@ def main():
     elif args.model == "dpt":
         attention_hooks = True
 
+        if args.dataset == 'kitti': 
+            scale = 0.00006016
+            shift = 0.00579
+        elif args.dataset == 'nyu':
+            scale = 0.000305
+            shift = 0.1378 
+
         model = DPTDepthModel(
             path=args.resume,
+            scale=scale,
+            shift=shift,
+            invert=True,
             backbone="vitb_rn50_384",
             non_negative=True,
             enable_attention_hooks=attention_hooks,
         )
+
         print('model {} loaded'.format(args.resume))
     else:
         assert(False, "{} model not supported".format(args.model))
@@ -169,21 +180,8 @@ def validate(val_loader, model, attacker):
     for i, (input, target) in enumerate(val_loader):
 
         input, target = input.cuda(), target.cuda()
-        input_clone = input.clone(); target_clone = target.clone()
 
-        if args.model == 'dpt':
-            input_clone = torch.nn.functional.interpolate(
-                    input_clone,
-                    size=(384, 384),
-                    mode="bicubic",
-                    align_corners=False)
-            target_clone = torch.nn.functional.interpolate(
-                    target_clone,
-                    size=(384, 384),
-                    mode="bicubic",
-                    align_corners=False)
-
-        adv_input = get_adversary(input_clone, target_clone, attacker)
+        adv_input = get_adversary(input, target, attacker)
 
         torch.cuda.synchronize()
         data_time = time.time() - end
@@ -273,19 +271,15 @@ def post_process(input, target, depth, model=None, bits=1):
             depth = F.interpolate(depth, size=(480, 640), mode='bilinear')
     
     elif model == 'dpt':
-        depth_min = torch.min(depth)
-        depth_max = torch.max(depth)
+        
+        # Only helps for better visualization
+        # if args.dataset == 'kitti':
+        #     depth *= 256
+        # elif args.dataset == "nyu":
+        #     depth *= 1000.0
+        
+        depth = depth.unsqueeze(1)
 
-        # TODO What am I even doing?
-        depth[depth < 0.5] = 0
-        depth = (255 - (255 * (depth - depth_min) / (depth_max - depth_min))) / 10
-        F.relu(depth, inplace=True)
-
-        depth = torch.nn.functional.interpolate(
-                            depth.unsqueeze(1),
-                            size=target.shape[2:],
-                            mode="bicubic",
-                            align_corners=False,)
     else:
         pass
 

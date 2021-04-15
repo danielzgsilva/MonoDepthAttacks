@@ -24,14 +24,13 @@ class MIFGSM(nn.Module):
 
     """
 
-    def __init__(self, model, device, loss, eps=6.0, steps=5, decay=1.0, mean=0.5, std=0.5, alpha=1, TI=False, k_=0, test=None):
+    def __init__(self, model, device, loss, eps=6.0, steps=5, decay=1.0, mean=0.5, std=0.5, alpha=1, TI=False, k_=0, targeted=False, test=None):
         super(MIFGSM, self).__init__()
         self.model = model
         self.eps = (eps / 255.0) / std
         self.steps = steps
         self.decay = decay
         self.device = device
-        self._targeted = -1
         self.alpha = alpha
         self.TI = TI
         self.test = test
@@ -44,6 +43,11 @@ class MIFGSM(nn.Module):
             self.loss = criteria.berHuLoss()
         else:
             assert (False, '{} loss not supported'.format(loss))
+
+        if targeted:
+            self._targeted = 1
+        else:
+            self._targeted = -1
 
         if self.TI:
             k = k_
