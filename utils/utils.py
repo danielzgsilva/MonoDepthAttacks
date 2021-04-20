@@ -51,6 +51,7 @@ def parse_command():
     parser.add_argument('--print-freq', '-p', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
     parser.add_argument('--g_smooth', '-gs', default=False, type=bool, help='Add translational invariance to the attack')
+    parser.add_argument('--targeted', '-t', default=False, type=bool, help='Choose if adversarial image is targeted')
     args = parser.parse_args()
     return args
 

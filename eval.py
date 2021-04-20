@@ -24,6 +24,7 @@ from AdaBins.models import UnetAdaptiveBins
 from AdaBins import model_io
 
 from DPT.dpt.models import DPTDepthModel
+from DPT.dpt.models import DPTSegmentationModel
 
 from attacks.MIFGSM import MIFGSM
 from attacks.pgd import PGD
@@ -110,6 +111,15 @@ def main():
             enable_attention_hooks=attention_hooks,
         )
 
+        if args.targeted:
+            segm_model = DPTSegmentationModel(
+                    150,
+                    path='DPT/weights/dpt_hybrid-ade20k-53898607.pt',
+                    backbone="vitb_rn50_384",
+                    )
+        else:
+            segm_model = None
+
         print('model {} loaded'.format(args.resume))
     else:
         assert(False, "{} model not supported".format(args.model))
@@ -127,6 +137,7 @@ def main():
                           alpha=mifgsm_params['alpha'],
                           TI=mifgsm_params['TI'],
                           k_=mifgsm_params['k'],
+                          targeted=args.targeted,
                           test=args.model)
     if args.attack =='pgd':
         print('attacking with {}'.format(args.attack))
@@ -153,7 +164,7 @@ def main():
                                                                         args.model, args.dataset, args.attack))
 
     # evaluate on validation set
-    result, img_merge = validate(val_loader, model, attacker)
+    result, img_merge = validate(val_loader, model, segm_model, attacker)
 
     with open(eval_txt, 'w') as txtfile:
         txtfile.write(
@@ -168,7 +179,7 @@ def main():
 
 
 # validation
-def validate(val_loader, model, attacker):
+def validate(val_loader, model, segm_model, attacker):
     average_meter = AverageMeter()
 
     model.eval()  # switch to evaluate mode
@@ -181,7 +192,7 @@ def validate(val_loader, model, attacker):
 
         input, target = input.cuda(), target.cuda()
 
-        adv_input = get_adversary(input, target, attacker)
+        adv_input, target = get_adversary(input, target, segm_model, attacker)
 
         torch.cuda.synchronize()
         data_time = time.time() - end
@@ -249,13 +260,20 @@ def validate(val_loader, model, attacker):
     return avg, img_merge
 
 
-def get_adversary(data, target, attacker=None):
+def get_adversary(data, target, segm_model, attacker=None):
     if attacker is not None:
+        if args.targeted:
+            segm_model.eval()
+            out = segm_model.forward(data.cpu())
+            segm = torch.argmax(out, dim=1) + 1
+            segm_mask = torch.zeros_like(segm).float()
+            target = torch.where(segm == 5, target.cpu(), segm_mask)
+    
         pert_image = attacker(data, target)
     else:
         pert_image = data
 
-    return pert_image
+    return pert_image, target.cuda()
 
 
 def post_process(input, target, depth, model=None, bits=1):
