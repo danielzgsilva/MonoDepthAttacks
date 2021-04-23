@@ -192,7 +192,7 @@ def validate(val_loader, model, segm_model, attacker):
 
         input, target = input.cuda(), target.cuda()
 
-        adv_input, target = get_adversary(input, target, segm_model, attacker)
+        adv_input = get_adversary(input, target, segm_model, attacker)
 
         torch.cuda.synchronize()
         data_time = time.time() - end
@@ -205,10 +205,9 @@ def validate(val_loader, model, segm_model, attacker):
             else:
                 pred = model(adv_input)
 
-        input, target, pred = post_process(input, target, pred, args.model)
-        # print('pred {} \n target {}'.format(pred, target))
+        pred = post_process(pred)
+        print('pred {} \n target {}'.format(pred, torch.max(target)))
         # print(input.shape, target.shape, pred.shape)
-
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
@@ -267,17 +266,17 @@ def get_adversary(data, target, segm_model, attacker=None):
             out = segm_model.forward(data.cpu())
             segm = torch.argmax(out, dim=1) + 1
             segm_mask = torch.zeros_like(segm).float()
-            target = torch.where(segm == 5, target.cpu(), segm_mask)
+            adv_target = torch.where(segm == targeted_class, target.cpu(), segm_mask)
     
-        pert_image = attacker(data, target)
+        pert_image = attacker(data, adv_target)
     else:
         pert_image = data
 
-    return pert_image, target.cuda()
+    return pert_image
 
 
-def post_process(input, target, depth, model=None, bits=1):
-    if model == 'adabins':
+def post_process(depth,):
+    if args.model == 'adabins':
         # resize target to match adabins output size
         if args.dataset == 'kitti':
             #target = F.interpolate(target, size=(114, 456), mode='bilinear')
@@ -288,7 +287,7 @@ def post_process(input, target, depth, model=None, bits=1):
             #input = F.interpolate(input, size=(480, 640), mode='bilinear')
             depth = F.interpolate(depth, size=(480, 640), mode='bilinear')
     
-    elif model == 'dpt':
+    elif args.model == 'dpt':
         
         # Only helps for better visualization
         # if args.dataset == 'kitti':
@@ -301,7 +300,7 @@ def post_process(input, target, depth, model=None, bits=1):
     else:
         pass
 
-    return input, target, depth
+    return depth
 
 
 if __name__ == '__main__':
@@ -310,7 +309,9 @@ if __name__ == '__main__':
     alpha = 1.0
     TI = False
     k = 5
+    targeted_class = 21 # cars
 
+    print('targeted_class: ', targeted_class)
     mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
     pgd_params = {'norm': 'inf', 'eps': max_perturb, 'alpha': alpha, 'iterations': iterations, 'TI': TI}
 
