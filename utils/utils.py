@@ -30,7 +30,7 @@ def parse_command():
                         default=None,
                         type=str, metavar='PATH',
                         help='path to latest checkpoint (default: ./run/run_1/checkpoint-5.pth.tar)')
-    parser.add_argument('-b', '--batch-size', default=8, type=int, help='mini-batch size (default: 4)')
+    parser.add_argument('-b', '--batch-size', default=1, type=int, help='mini-batch size (default: 4)')
     parser.add_argument('--loss', default='l1', type=str)
     parser.add_argument('--epochs', default=15, type=int, metavar='N',
                         help='number of total epochs to run (default: 15)')
@@ -51,6 +51,7 @@ def parse_command():
     parser.add_argument('--print-freq', '-p', default=10, type=int,
                         metavar='N', help='print frequency (default: 10)')
     parser.add_argument('--g_smooth', '-gs', default=False, type=bool, help='Add translational invariance to the attack')
+    parser.add_argument('--targeted', '-t', default=False, type=bool, help='Choose if adversarial image is targeted')
     args = parser.parse_args()
     return args
 
@@ -64,8 +65,8 @@ def create_loader(args):
             print('kitti dataset "{}" doesnt existed!'.format(kitti_root))
             exit(-1)
 
-        train_set = kitti_dataloader.KITTIDataset(kitti_root, type='train')
-        val_set = kitti_dataloader.KITTIDataset(kitti_root, type='test')
+        train_set = kitti_dataloader.KITTIDataset(kitti_root, type='train', model=args.model)
+        val_set = kitti_dataloader.KITTIDataset(kitti_root, type='test', model=args.model)
 
     elif args.dataset == 'nyu':
         traindir = os.path.join(Path.db_root_dir(args.dataset), 'train')
@@ -82,8 +83,8 @@ def create_loader(args):
             print('Val dataset "{}" doesnt existed!'.format(valdir))
             exit(-1)
 
-        train_set = nyu_dataloader.NYUDataset(traindir, type='train')
-        val_set = nyu_dataloader.NYUDataset(valdir, type='val')
+        train_set = nyu_dataloader.NYUDataset(traindir, type='train', model=args.model)
+        val_set = nyu_dataloader.NYUDataset(valdir, type='val', model=args.model)
     else:
         print('no dataset named as ', args.dataset)
         exit(-1)

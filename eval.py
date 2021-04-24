@@ -24,8 +24,10 @@ from AdaBins.models import UnetAdaptiveBins
 from AdaBins import model_io
 
 from DPT.dpt.models import DPTDepthModel
+from DPT.dpt.models import DPTSegmentationModel
 
-from MIFGSM import MIFGSM
+from attacks.MIFGSM import MIFGSM
+from attacks.pgd import PGD
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
@@ -90,17 +92,35 @@ def main():
         model, _, _ = model_io.load_checkpoint(args.resume, model)
     
     elif args.model == "dpt":
-        # model_path = args.resume
-        model_path = "DPT/weights/dpt_hybrid-midas-501f0c75.pt"
         attention_hooks = True
 
+        if args.dataset == 'kitti': 
+            scale = 0.00006016
+            shift = 0.00579
+        elif args.dataset == 'nyu':
+            scale = 0.000305
+            shift = 0.1378 
+
         model = DPTDepthModel(
-            path=model_path,
+            path=args.resume,
+            scale=scale,
+            shift=shift,
+            invert=True,
             backbone="vitb_rn50_384",
             non_negative=True,
             enable_attention_hooks=attention_hooks,
         )
-        print('model {} loaded'.format(model_path))
+
+        if args.targeted:
+            segm_model = DPTSegmentationModel(
+                    150,
+                    path='DPT/weights/dpt_hybrid-ade20k-53898607.pt',
+                    backbone="vitb_rn50_384",
+                    )
+        else:
+            segm_model = None
+
+        print('model {} loaded'.format(args.resume))
     else:
         assert(False, "{} model not supported".format(args.model))
 
@@ -116,7 +136,18 @@ def main():
                           decay=mifgsm_params['decay'],
                           alpha=mifgsm_params['alpha'],
                           TI=mifgsm_params['TI'],
-                          k_=mifgsm_params['k'])
+                          k_=mifgsm_params['k'],
+                          targeted=args.targeted,
+                          test=args.model)
+    if args.attack =='pgd':
+        print('attacking with {}'.format(args.attack))
+        attacker = PGD(model, "cuda:0", args.loss,
+                        norm=pgd_params['norm'],
+                        eps=pgd_params['eps'],
+                        alpha=pgd_params['alpha'],
+                        iters=pgd_params['iterations'],
+                        TI=pgd_params['TI'],
+                        test=args.model)
     else:
         print('no attack')
 
@@ -133,7 +164,7 @@ def main():
                                                                         args.model, args.dataset, args.attack))
 
     # evaluate on validation set
-    result, img_merge = validate(val_loader, model, attacker)
+    result, img_merge = validate(val_loader, model, segm_model, attacker)
 
     with open(eval_txt, 'w') as txtfile:
         txtfile.write(
@@ -148,7 +179,7 @@ def main():
 
 
 # validation
-def validate(val_loader, model, attacker):
+def validate(val_loader, model, segm_model, attacker):
     average_meter = AverageMeter()
 
     model.eval()  # switch to evaluate mode
@@ -161,7 +192,7 @@ def validate(val_loader, model, attacker):
 
         input, target = input.cuda(), target.cuda()
 
-        input = get_adversary(input, target, attacker)
+        adv_input = get_adversary(input, target, segm_model, attacker)
 
         torch.cuda.synchronize()
         data_time = time.time() - end
@@ -169,38 +200,18 @@ def validate(val_loader, model, attacker):
         # compute output
         end = time.time()
         with torch.no_grad():
-            if args.model != 'adabins':
-                input2 = input.clone()
-                if args.model == 'dpt':
-                    input2 = torch.nn.functional.interpolate(
-                            input2,
-                            size=(384, 384),
-                            mode="bicubic",
-                            align_corners=False)
-
-                pred = model(input2)
-                
+            if args.model == 'adabins':
+                _, pred = model(adv_input)
             else:
-                _, pred = model(input)
+                pred = model(adv_input)
 
-                # resize target to match adabins output size
-                if args.dataset == 'kitti':
-                    #target = F.interpolate(target, size=(114, 456), mode='bilinear')
-                    #input = F.interpolate(input, size=(114, 456), mode='bilinear')
-                    pred = F.interpolate(pred, size=(228, 912), mode='bilinear')
-                elif args.dataset == 'nyu':
-                    #target = F.interpolate(target, size=(480, 640))
-                    #input = F.interpolate(input, size=(480, 640), mode='bilinear')
-                    pred = F.interpolate(pred, size=(480, 640), mode='bilinear')
+        pred = post_process(pred)
+        print('pred {} \n target {}'.format(pred, torch.max(target)))
+        # print(input.shape, target.shape, pred.shape)
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
 
-        if args.model == 'dpt':
-            # pred = torch.unsqueeze(pred, 1)
-            pred = post_process(pred, target)
-            print('pred {} \n target {}'.format(pred, target))
-            # print(input.shape, target.shape, pred.shape)
         # measure accuracy and record loss
         result = Result()
         result.evaluate(pred.data, target.data)
@@ -211,8 +222,8 @@ def validate(val_loader, model, attacker):
         # save 8 images for visualization
         if args.dataset == 'kitti':
             rgb = input[0]
-            pred = pred[0]
             target = target[0]
+            pred = pred[0]
         else:
             rgb = input
 
@@ -248,27 +259,47 @@ def validate(val_loader, model, attacker):
     return avg, img_merge
 
 
-def get_adversary(data, target, attacker=None):
+def get_adversary(data, target, segm_model, attacker=None):
     if attacker is not None:
-        pert_image = attacker(data, target)
+        if args.targeted:
+            segm_model.eval()
+            out = segm_model.forward(data.cpu())
+            segm = torch.argmax(out, dim=1) + 1
+            segm_mask = torch.zeros_like(segm).float()
+            adv_target = torch.where(segm == targeted_class, target.cpu(), segm_mask)
+    
+        pert_image = attacker(data, adv_target)
     else:
         pert_image = data
 
     return pert_image
 
 
-def post_process(depth, target, bits=1):
-    depth_min = torch.min(depth)
-    depth_max = torch.max(depth)
-    depth[depth < 0.5] = 0
-    depth = (255 - (255 * (depth - depth_min) / (depth_max - depth_min))) / 25.5
-    # depth = (depth - depth_min) / (depth_max - depth_min)
-    F.relu(depth, inplace=True)
-    depth = torch.nn.functional.interpolate(
-                        depth.unsqueeze(1),
-                        size=target.shape[2:],
-                        mode="bicubic",
-                        align_corners=False,)
+def post_process(depth,):
+    if args.model == 'adabins':
+        # resize target to match adabins output size
+        if args.dataset == 'kitti':
+            #target = F.interpolate(target, size=(114, 456), mode='bilinear')
+            #input = F.interpolate(input, size=(114, 456), mode='bilinear')
+            depth = F.interpolate(depth, size=(228, 912), mode='bilinear')
+        elif args.dataset == 'nyu':
+            #target = F.interpolate(target, size=(480, 640))
+            #input = F.interpolate(input, size=(480, 640), mode='bilinear')
+            depth = F.interpolate(depth, size=(480, 640), mode='bilinear')
+    
+    elif args.model == 'dpt':
+        
+        # Only helps for better visualization
+        # if args.dataset == 'kitti':
+        #     depth *= 256
+        # elif args.dataset == "nyu":
+        #     depth *= 1000.0
+        
+        depth = depth.unsqueeze(1)
+
+    else:
+        pass
+
     return depth
 
 
@@ -278,8 +309,11 @@ if __name__ == '__main__':
     alpha = 1.0
     TI = False
     k = 5
+    targeted_class = 21 # cars
 
+    print('targeted_class: ', targeted_class)
     mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
+    pgd_params = {'norm': 'inf', 'eps': max_perturb, 'alpha': alpha, 'iterations': iterations, 'TI': TI}
 
     args = utils.parse_command()
     print(args)
