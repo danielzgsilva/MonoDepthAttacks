@@ -19,6 +19,9 @@ from network import FCRN
 from utils import criteria, utils
 from utils.metrics import AverageMeter, Result
 
+from attacks.MIFGSM import MIFGSM
+from attacks.pgd import PGD
+
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
@@ -69,9 +72,8 @@ def main():
         # del model_dict
         torch.cuda.empty_cache()
     else:
-        print("=> creating Model")
+        print("=> creating Model from scratch")
         model = FCRN.ResNet(layers=args.resnet_layers, output_size=train_loader.dataset.output_size)
-        print("=> model created.")
         start_epoch = 0
 
         # different modules have different learning rate
@@ -87,6 +89,38 @@ def main():
 
         # You can use DataParallel() whether you use Multi-GPUs or not
         model = nn.DataParallel(model).cuda()
+
+    attacker = None
+    if args.adv_training:
+        start_epoch = 0
+        if not args.attack:
+            assert(False, "You must supply an attack for adversarial training")
+
+        if args.attack == 'mifgsm':
+            attacker = MIFGSM(model, "cuda:0", args.loss,
+                              eps=mifgsm_params['eps'],
+                              steps=mifgsm_params['steps'],
+                              decay=mifgsm_params['decay'],
+                              alpha=mifgsm_params['alpha'],
+                              TI=mifgsm_params['TI'],
+                              k_=mifgsm_params['k'],
+                              targeted=args.targeted,
+                              test=args.model)
+        elif args.attack == 'pgd':
+            attacker = PGD(model, "cuda:0", args.loss,
+                           norm=pgd_params['norm'],
+                           eps=pgd_params['eps'],
+                           alpha=pgd_params['alpha'],
+                           iters=pgd_params['iterations'],
+                           TI=pgd_params['TI'],
+                           k_=mifgsm_params['k'],
+                           test=args.model)
+        else:
+            assert(False, "{} attack not supported".format(args.attack))
+
+        print('performing adversarial training with {} attack and {} loss'.format(args.attack, args.loss))
+    else:
+        print('performing standard training with {} loss'.format(args.loss))
 
     # when training, use reduceLROnPlateau to reduce learning rate
     if args.scheduler == 'plateau':
@@ -137,7 +171,7 @@ def main():
         for i, param_group in enumerate(optimizer.param_groups):
             old_lr = float(param_group['lr'])
 
-        train(train_loader, model, criterion, optimizer, epoch)  # train for one epoch
+        train(train_loader, model, criterion, optimizer, epoch, attacker)  # train for one epoch
         result, img_merge = validate(val_loader, model, epoch)  # evaluate on validation set
 
         # remember best rmse and save checkpoint
@@ -175,7 +209,7 @@ def main():
 
 
 # train
-def train(train_loader, model, criterion, optimizer, epoch):
+def train(train_loader, model, criterion, optimizer, epoch, attacker):
     average_meter = AverageMeter()
     model.train()  # switch to train mode
     end = time.time()
@@ -185,18 +219,18 @@ def train(train_loader, model, criterion, optimizer, epoch):
     for i, (input, target) in enumerate(train_loader):
         # itr_count += 1
         input, target = input.cuda(), target.cuda()
-        # print('input size  = ', input.size())
-        # print('target size = ', target.size())
+
         torch.cuda.synchronize()
         data_time = time.time() - end
 
         # compute pred
         end = time.time()
 
-        pred = model(input)  # @wx 注意输出
+        # get adversary for adversarial training
+        if attacker is not None:
+            input = attacker(input, target)
 
-        # print('pred size = ', pred.size())
-        # print('target size = ', target.size())
+        pred = model(input)
 
         loss = criterion(pred, target)
         optimizer.zero_grad()
@@ -306,6 +340,15 @@ def validate(val_loader, model, epoch):
 
 
 if __name__ == '__main__':
+    max_perturb = 6.0
+    iterations = 10
+    alpha = 1.0
+    TI = False
+    k = 5
+
+    mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
+    pgd_params = {'norm': 'inf', 'eps': max_perturb, 'alpha': alpha, 'iterations': iterations, 'TI': TI, 'k': k}
+
     args = utils.parse_command()
     print(args)
 
