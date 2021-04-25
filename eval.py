@@ -184,6 +184,7 @@ def validate(val_loader, model, segm_model, attacker):
     average_meter = AverageMeter()
 
     model.eval()  # switch to evaluate mode
+    targeted_metrics = {'rmse': [], 'absrel': [], 'log10': []}
 
     end = time.time()
 
@@ -217,7 +218,10 @@ def validate(val_loader, model, segm_model, attacker):
         result = Result()
         result.evaluate(pred.data, target.data)
         if args.targeted:
-            result.targeted_eval(pred.data.squeeze(1), target.data.squeeze(1), segm)
+            rmse, absrel, log10 = result.targeted_eval(pred.data.squeeze(1), target.data.squeeze(1), segm)
+            targeted_metrics['rmse'].append(rmse)
+            targeted_metrics['absrel'].append(absrel)
+            targeted_metrics['log10'].append(log10)
 
         average_meter.update(result, gpu_time, data_time, input.size(0))
         end = time.time()
@@ -249,6 +253,16 @@ def validate(val_loader, model, segm_model, attacker):
 
     avg = average_meter.average()
 
+    if args.targeted:
+        avg_rmse = sum(targeted_metrics['rmse']) / len(targeted_metrics['rmse'])
+        avg_absrel = sum(targeted_metrics['absrel']) / len(targeted_metrics['absrel'])
+        avg_log10 = sum(targeted_metrics['log10']) / len(targeted_metrics['log10'])
+
+        print('\n*\n'
+          'RMSE={}\n'
+          'Rel={}\n'
+          'Log10={}\n'.format(avg_rmse, avg_absrel, avg_log10))
+              
     print('\n*\n'
           'RMSE={average.rmse:.3f}\n'
           'Rel={average.absrel:.3f}\n'
@@ -307,20 +321,14 @@ def post_process(depth,):
 
 
 if __name__ == '__main__':
-    max_perturb = 5.0
-    iterations = 10
-    alpha = 1.0
-    TI = False
-    k = 5
     targeted_class = 21 # cars
     move_target = [-0.1, -0.05, 0.1, 0.05]
 
-    print('targeted_class: ', targeted_class)
-    mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
-    pgd_params = {'norm': 'inf', 'eps': max_perturb, 'alpha': alpha, 'iterations': iterations, 'TI': TI, 'k': k}
-
     args = utils.parse_command()
     print(args)
+    print('targeted_class: ', targeted_class)
+    mifgsm_params = {'eps': args.epsilon, 'steps': args.iterations, 'decay': 1.0, 'alpha': args.alpha, 'TI': args.g_smooth, 'k': args.k}
+    pgd_params = {'norm': 'inf', 'eps': args.epsilon, 'alpha': args.alpha, 'iterations': args.iterations, 'TI': args.g_smooth, 'k': args.k}
 
     best_result = Result()
     best_result.set_to_worst()
