@@ -118,7 +118,7 @@ def main():
         else:
             assert(False, "{} attack not supported".format(args.attack))
 
-        print('performing adversarial training with {} attack and {} loss'.format(args.attack, args.loss))
+        print('performing adversarial training with {} attack and {} loss'.format(args.attack, args.loss), flush=True)
     else:
         print('performing standard training with {} loss'.format(args.loss))
 
@@ -258,7 +258,7 @@ def train(train_loader, model, criterion, optimizer, epoch, attacker):
                   'Delta2={result.delta2:.3f}({average.delta2:.3f}) '
                   'Delta3={result.delta3:.3f}({average.delta3:.3f})'.format(
                 epoch, i + 1, len(train_loader), data_time=data_time,
-                gpu_time=gpu_time, Loss=loss.item(), result=result, average=average_meter.average()))
+                gpu_time=gpu_time, Loss=loss.item(), result=result, average=average_meter.average()), flush=True)
             current_step = epoch * batch_num + i
 
     avg = average_meter.average()
@@ -313,7 +313,7 @@ def validate(val_loader, model, epoch):
             # utils.save_image(img_merge, filename)
             pass
 
-        if (i + 1) % args.print_freq == 0:
+        if (i + 1) % 100 == 0:
             print('Test: [{0}/{1}]\t'
                   't_GPU={gpu_time:.3f}({average.gpu_time:.3f})\n\t'
                   'RMSE={result.rmse:.2f}({average.rmse:.2f}) '
@@ -334,23 +334,23 @@ def validate(val_loader, model, epoch):
           'Delta2={average.delta2:.3f}\n'
           'Delta3={average.delta3:.3f}\n'
           't_GPU={time:.3f}\n'.format(
-        average=avg, time=avg.gpu_time))
+        average=avg, time=avg.gpu_time), flush=True)
 
     return avg, img_merge
 
 
 if __name__ == '__main__':
-    max_perturb = 6.0
-    iterations = 10
-    alpha = 1.0
+    #max_perturb = 6.0
+    #iterations = 10
+    #alpha = 1.0
     TI = False
     k = 5
 
-    mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
-    pgd_params = {'norm': 'inf', 'eps': max_perturb, 'alpha': alpha, 'iterations': iterations, 'TI': TI, 'k': k}
-
     args = utils.parse_command()
     print(args)
+
+    mifgsm_params = {'eps': args.epsilon, 'steps': args.iterations, 'decay': 1.0, 'alpha': args.alpha, 'TI': TI, 'k': k}
+    pgd_params = {'norm': 'inf', 'eps': args.epsilon, 'alpha': args.alpha, 'iterations': args.iterations, 'TI': TI, 'k': k}
 
     best_result = Result()
     best_result.set_to_worst()

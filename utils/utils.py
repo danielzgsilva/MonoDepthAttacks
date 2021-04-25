@@ -49,10 +49,16 @@ def parse_command():
                         help='number of data loading workers (default: 10)')
     parser.add_argument('--dataset', type=str, default="nyu")
     parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
-    parser.add_argument('--print-freq', '-p', default=10, type=int,
-                        metavar='N', help='print frequency (default: 10)')
+    parser.add_argument('--print-freq', '-p', default=1000, type=int,
+                        metavar='N', help='print frequency (default: 1000)')
     parser.add_argument('--g_smooth', '-gs', default=False, type=bool, help='Add translational invariance to the attack')
     parser.add_argument('--targeted', '-t', default=False, type=bool, help='Choose if adversarial image is targeted')
+
+    parser.add_argument('--epsilon', default=6.0, type=float)
+    parser.add_argument('--iterations', default=10, type=int)
+    parser.add_argument('--alpha', default=1.0, type=float)
+
+
     args = parser.parse_args()
     return args
 
