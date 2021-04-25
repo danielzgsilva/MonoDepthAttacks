@@ -65,7 +65,7 @@ def main():
         # solve 'out of memory'
         model = checkpoint['model']
 
-        print("=> loaded checkpoint (epoch {})".format(checkpoint['epoch']))
+        print("=> loaded checkpoint (epoch {})".format(checkpoint['epoch']), flush=True)
 
         # clear memory
         del checkpoint
