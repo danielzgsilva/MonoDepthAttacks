@@ -10,10 +10,10 @@ iheight, iwidth = 480, 640  # raw image size
 class NYUDataset(MyDataloader):
     def __init__(self, root, type, sparsifier=None, modality='rgb', model='resnet'):
         super(NYUDataset, self).__init__(root, type, sparsifier, modality)
-        if model == 'adabins':
-            self.output_size = (228, 304)
-        else:
+        if model == 'dpt':
             self.output_size = (480, 640)
+        else:
+            self.output_size = (228, 304)
 
     def train_transform(self, rgb, depth):
         # perform 1st step of data augmentation

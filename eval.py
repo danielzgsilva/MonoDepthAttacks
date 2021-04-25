@@ -139,7 +139,7 @@ def main():
                           k_=mifgsm_params['k'],
                           targeted=args.targeted,
                           test=args.model)
-    if args.attack =='pgd':
+    elif args.attack =='pgd':
         print('attacking with {}'.format(args.attack))
         attacker = PGD(model, "cuda:0", args.loss,
                         norm=pgd_params['norm'],
@@ -147,6 +147,7 @@ def main():
                         alpha=pgd_params['alpha'],
                         iters=pgd_params['iterations'],
                         TI=pgd_params['TI'],
+                        k_=mifgsm_params['k'],
                         test=args.model)
     else:
         print('no attack')
@@ -206,7 +207,7 @@ def validate(val_loader, model, segm_model, attacker):
                 pred = model(adv_input)
 
         pred = post_process(pred)
-        print('pred {} \n target {}'.format(pred, torch.max(target)))
+        # print('pred {} \n target {}'.format(pred, torch.max(target)))
         # print(input.shape, target.shape, pred.shape)
 
         torch.cuda.synchronize()
@@ -221,7 +222,7 @@ def validate(val_loader, model, segm_model, attacker):
 
         # save 8 images for visualization
         if args.dataset == 'kitti':
-            rgb = input[0]
+            rgb = adv_input[0]
             target = target[0]
             pred = pred[0]
         else:
@@ -267,7 +268,7 @@ def get_adversary(data, target, segm_model, attacker=None):
             segm = torch.argmax(out, dim=1) + 1
             segm_mask = torch.zeros_like(segm).float()
             adv_target = torch.where(segm == targeted_class, target.cpu(), segm_mask)
-    
+
         pert_image = attacker(data, adv_target)
     else:
         pert_image = data
@@ -277,14 +278,10 @@ def get_adversary(data, target, segm_model, attacker=None):
 
 def post_process(depth,):
     if args.model == 'adabins':
-        # resize target to match adabins output size
+        # upscale adabins output to original size
         if args.dataset == 'kitti':
-            #target = F.interpolate(target, size=(114, 456), mode='bilinear')
-            #input = F.interpolate(input, size=(114, 456), mode='bilinear')
             depth = F.interpolate(depth, size=(228, 912), mode='bilinear')
         elif args.dataset == 'nyu':
-            #target = F.interpolate(target, size=(480, 640))
-            #input = F.interpolate(input, size=(480, 640), mode='bilinear')
             depth = F.interpolate(depth, size=(480, 640), mode='bilinear')
     
     elif args.model == 'dpt':
@@ -313,7 +310,7 @@ if __name__ == '__main__':
 
     print('targeted_class: ', targeted_class)
     mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}
-    pgd_params = {'norm': 'inf', 'eps': max_perturb, 'alpha': alpha, 'iterations': iterations, 'TI': TI}
+    pgd_params = {'norm': 'inf', 'eps': max_perturb, 'alpha': alpha, 'iterations': iterations, 'TI': TI, 'k': k}
 
     args = utils.parse_command()
     print(args)
