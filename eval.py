@@ -193,7 +193,7 @@ def validate(val_loader, model, segm_model, attacker):
 
         input, target = input.cuda(), target.cuda()
 
-        adv_input = get_adversary(input, target, segm_model, attacker)
+        adv_input, segm = get_adversary(input, target, segm_model, attacker)
 
         torch.cuda.synchronize()
         data_time = time.time() - end
@@ -207,7 +207,7 @@ def validate(val_loader, model, segm_model, attacker):
                 pred = model(adv_input)
 
         pred = post_process(pred)
-        print('pred {} \n target {}'.format(pred, torch.max(target)))
+        # print('pred {} \n target {}'.format(pred, torch.max(target)))
         # print(input.shape, target.shape, pred.shape)
 
         torch.cuda.synchronize()
@@ -216,13 +216,15 @@ def validate(val_loader, model, segm_model, attacker):
         # measure accuracy and record loss
         result = Result()
         result.evaluate(pred.data, target.data)
+        if args.targeted:
+            result.targeted_eval(pred.data, target.data, segm)
 
         average_meter.update(result, gpu_time, data_time, input.size(0))
         end = time.time()
 
         # save 8 images for visualization
         if args.dataset == 'kitti':
-            rgb = input[0]
+            rgb = adv_input[0]
             target = target[0]
             pred = pred[0]
         else:
@@ -268,12 +270,15 @@ def get_adversary(data, target, segm_model, attacker=None):
             segm = torch.argmax(out, dim=1) + 1
             segm_mask = torch.zeros_like(segm).float()
             adv_target = torch.where(segm == targeted_class, target.cpu(), segm_mask)
+        else:
+            adv_target = target
 
         pert_image = attacker(data, adv_target)
     else:
         pert_image = data
+        segm = None
 
-    return pert_image
+    return pert_image, segm
 
 
 def post_process(depth,):
