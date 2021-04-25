@@ -62,6 +62,33 @@ class Result(object):
         self.irmse = math.sqrt((torch.pow(abs_inv_diff, 2)).mean())
         self.imae = float(abs_inv_diff.mean())
 
+    def targeted_eval(self, output, target, segm):
+        valid_mask = (segm == 21)
+        output = output[valid_mask]
+        target = target[valid_mask]
+
+        abs_diff = (output - target).abs()
+
+        mse = float((torch.pow(abs_diff, 2)).mean())
+        rmse = math.sqrt(mse)
+        mae = float(abs_diff.mean())
+        lg10 = float((log10(output) - log10(target)).abs().mean())
+        absrel = float((abs_diff / target).mean())
+
+        maxRatio = torch.max(output / target, target / output)
+        delta1 = float((maxRatio < 1.25).float().mean())
+        delta2 = float((maxRatio < 1.25 ** 2).float().mean())
+        delta3 = float((maxRatio < 1.25 ** 3).float().mean())
+        data_time = 0
+        gpu_time = 0
+
+        inv_output = 1 / output
+        inv_target = 1 / target
+        abs_inv_diff = (inv_output - inv_target).abs()
+        irmse = math.sqrt((torch.pow(abs_inv_diff, 2)).mean())
+        imae = float(abs_inv_diff.mean())
+
+        print('Targeted Results: \n RMSE: {}\nRML: {}\nLog10: {}'.format(rmse, absrel, log10))
 
 class AverageMeter(object):
     def __init__(self):
