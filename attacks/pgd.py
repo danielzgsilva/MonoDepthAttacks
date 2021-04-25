@@ -6,7 +6,7 @@ import numpy as np
 from utils import criteria
 
 class PGD(nn.Module):
-    def __init__(self, model, device, loss, norm, eps, alpha, iters, mean=0.5, std=0.5, TI=False, test=None):
+    def __init__(self, model, device, loss, norm, eps, alpha, iters, mean=0.5, std=0.5, TI=False, k_=0, test=None):
         super(PGD, self).__init__()
         assert(2 <= eps <= 10)
         assert(norm in [2, 'inf', np.inf])
@@ -29,7 +29,7 @@ class PGD(nn.Module):
         self.TI = TI
         self.test = test
         if self.TI:
-            k = 5
+            k = k_
             w = 2*k + 1
             sig = k / np.sqrt(3)
             self.smoothing = GaussianSmooth(w, sig)
