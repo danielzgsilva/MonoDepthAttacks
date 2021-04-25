@@ -30,7 +30,7 @@ def parse_command():
                         default=None,
                         type=str, metavar='PATH',
                         help='path to latest checkpoint (default: ./run/run_1/checkpoint-5.pth.tar)')
-    parser.add_argument('-b', '--batch-size', default=8, type=int, help='mini-batch size (default: 4)')
+    parser.add_argument('-b', '--batch-size', default=1, type=int, help='mini-batch size (default: 4)')
     parser.add_argument('--loss', default='l1', type=str)
     parser.add_argument('--epochs', default=15, type=int, metavar='N',
                         help='number of total epochs to run (default: 15)')

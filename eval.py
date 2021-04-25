@@ -207,7 +207,7 @@ def validate(val_loader, model, segm_model, attacker):
                 pred = model(adv_input)
 
         pred = post_process(pred)
-        print('pred {} \n target {}'.format(pred, torch.max(target)))
+        # print('pred {} \n target {}'.format(pred, torch.max(target)))
         # print(input.shape, target.shape, pred.shape)
 
         torch.cuda.synchronize()
@@ -224,7 +224,7 @@ def validate(val_loader, model, segm_model, attacker):
 
         # save 8 images for visualization
         if args.dataset == 'kitti':
-            rgb = input[0]
+            rgb = adv_input[0]
             target = target[0]
             pred = pred[0]
         else:
