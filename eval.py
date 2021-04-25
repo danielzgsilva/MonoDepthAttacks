@@ -217,7 +217,7 @@ def validate(val_loader, model, segm_model, attacker):
         result = Result()
         result.evaluate(pred.data, target.data)
         if args.targeted:
-            result.targeted_eval(pred.data, target.data, segm)
+            result.targeted_eval(pred.data.squeeze(1), target.data.squeeze(1), segm)
 
         average_meter.update(result, gpu_time, data_time, input.size(0))
         end = time.time()
@@ -268,12 +268,13 @@ def get_adversary(data, target, segm_model, attacker=None):
             segm_model.eval()
             out = segm_model.forward(data.cpu())
             segm = torch.argmax(out, dim=1) + 1
-            segm_mask = torch.zeros_like(segm).float()
-            adv_target = torch.where(segm == targeted_class, target.cpu(), segm_mask)
+            # segm_mask = torch.zeros_like(segm).float()
+            adv_target = torch.where(segm == targeted_class, target.cpu() * (1 + move_target[2]), target.cpu())
+
         else:
             adv_target = target
 
-        pert_image = attacker(data, adv_target)
+        pert_image = attacker(data.cuda(), adv_target.cuda())
     else:
         pert_image = data
         segm = None
@@ -312,6 +313,7 @@ if __name__ == '__main__':
     TI = False
     k = 5
     targeted_class = 21 # cars
+    move_target = [-0.1, -0.05, 0.1, 0.05]
 
     print('targeted_class: ', targeted_class)
     mifgsm_params = {'eps': max_perturb, 'steps': iterations, 'decay': 1.0, 'alpha': alpha, 'TI': TI, 'k': k}

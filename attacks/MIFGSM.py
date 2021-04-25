@@ -44,10 +44,10 @@ class MIFGSM(nn.Module):
         else:
             assert (False, '{} loss not supported'.format(loss))
 
-        # if targeted:
-        #     self._targeted = 1
-        # else:
-        self._targeted = -1
+        if targeted:
+            self._targeted = 1
+        else:
+            self._targeted = -1
 
         if self.TI:
             k = k_
