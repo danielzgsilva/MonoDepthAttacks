@@ -51,6 +51,8 @@ def main():
     print("Kitti dataloader loaded")
     del _
 
+    segm_model = None
+
     if args.resume is not None:
         assert os.path.isfile(args.resume), \
             "=> no checkpoint found at '{}'".format(args.resume)
@@ -117,8 +119,6 @@ def main():
                     path='DPT/weights/dpt_hybrid-ade20k-53898607.pt',
                     backbone="vitb_rn50_384",
                     )
-        else:
-            segm_model = None
 
         print('model {} loaded'.format(args.resume))
     else:
@@ -180,7 +180,7 @@ def main():
 
 
 # validation
-def validate(val_loader, model, segm_model, attacker):
+def validate(val_loader, model, segm_model=None, attacker=None):
     average_meter = AverageMeter()
 
     model.eval()  # switch to evaluate mode
@@ -276,7 +276,7 @@ def validate(val_loader, model, segm_model, attacker):
     return avg, img_merge
 
 
-def get_adversary(data, target, segm_model, attacker=None):
+def get_adversary(data, target, segm_model=None, attacker=None):
     if attacker is not None:
         if args.targeted:
             segm_model.eval()
