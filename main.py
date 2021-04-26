@@ -93,6 +93,7 @@ def main():
     attacker = None
     if args.adv_training:
         start_epoch = 0
+        best_result.set_to_worst()
         if not args.attack:
             assert(False, "You must supply an attack for adversarial training")
 
