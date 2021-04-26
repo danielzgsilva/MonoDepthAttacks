@@ -111,7 +111,7 @@ def create_loader(args):
 
 
 def get_output_directory(args):
-    if args.resume:
+    if args.resume and not args.adv_training:
         return os.path.dirname(args.resume)
     else:
         save_dir_root = os.path.join(os.path.dirname(os.path.abspath(__file__)))
