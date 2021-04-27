@@ -164,8 +164,8 @@ def main():
     eval_txt = os.path.join(output_directory, 'eval_results_{}_{}_{}.txt'.format(
                                                                         args.model, args.dataset, args.attack))
 
-    # make dirs to save imgs
-    if args.save_image_dir is not None:
+    # make dirs to save imgs unless we're testing on already saved imgs
+    if args.save_image_dir is not None and args.dataset != 'saved_images':
         img_dir = os.path.join(args.save_image_dir, 'imgs')
         gt_dir = os.path.join(args.save_image_dir, 'gt')
 
@@ -258,11 +258,12 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
                   'Delta3={result.delta3:.3f}({average.delta3:.3f})'.format(
                 i + 1, len(val_loader), gpu_time=gpu_time, result=result, average=average_meter.average()))
 
-        if save_img_dir is not None:
+        # save images only if we're not testing on already saved images
+        if save_img_dir is not None and args.dataset != 'saved_images':
             img = adv_input[0]
             depth = target[0]
             save_image(img, os.path.join(save_img_dir, 'imgs', '{}.png'.format(i)))
-            save_image(img, os.path.join(save_img_dir, 'gt', '{}.png'.format(i)))
+            save_image(depth, os.path.join(save_img_dir, 'gt', '{}.png'.format(i)))
 
         if save_img_dir is not None and i > num_imgs_to_save:
             break
