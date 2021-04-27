@@ -12,6 +12,7 @@ import time
 import os
 
 import torch
+from torchvision.utils import save_image
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import lr_scheduler
@@ -48,7 +49,6 @@ def main():
         print("Let's use GPU ", torch.cuda.current_device())
 
     _, val_loader = utils.create_loader(args)
-    print("Kitti dataloader loaded")
     del _
 
     segm_model = None
@@ -164,8 +164,18 @@ def main():
     eval_txt = os.path.join(output_directory, 'eval_results_{}_{}_{}.txt'.format(
                                                                         args.model, args.dataset, args.attack))
 
+    # make dirs to save imgs
+    if args.save_image_dir is not None:
+        img_dir = os.path.join(args.save_image_dir, 'imgs')
+        gt_dir = os.path.join(args.save_image_dir, 'gt')
+
+        if not os.path.exists(img_dir):
+            os.makedirs(img_dir)
+        if not os.path.exists(gt_dir):
+            os.makedirs(gt_dir)
+
     # evaluate on validation set
-    result, img_merge = validate(val_loader, model, segm_model, attacker)
+    result, img_merge = validate(val_loader, model, segm_model, attacker, args.save_image_dir, args.num_images_to_save)
 
     with open(eval_txt, 'w') as txtfile:
         txtfile.write(
@@ -180,7 +190,7 @@ def main():
 
 
 # validation
-def validate(val_loader, model, segm_model=None, attacker=None):
+def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=None, num_imgs_to_save=None):
     average_meter = AverageMeter()
 
     model.eval()  # switch to evaluate mode
@@ -191,7 +201,6 @@ def validate(val_loader, model, segm_model=None, attacker=None):
     skip = len(val_loader) // 9  # save images every skip iters
 
     for i, (input, target) in enumerate(val_loader):
-
         input, target = input.cuda(), target.cuda()
 
         adv_input, segm = get_adversary(input, target, segm_model, attacker)
@@ -208,8 +217,6 @@ def validate(val_loader, model, segm_model=None, attacker=None):
                 pred = model(adv_input)
 
         pred = post_process(pred)
-        # print('pred {} \n target {}'.format(pred, torch.max(target)))
-        # print(input.shape, target.shape, pred.shape)
 
         torch.cuda.synchronize()
         gpu_time = time.time() - end
@@ -250,6 +257,15 @@ def validate(val_loader, model, segm_model=None, attacker=None):
                   'Delta2={result.delta2:.3f}({average.delta2:.3f}) '
                   'Delta3={result.delta3:.3f}({average.delta3:.3f})'.format(
                 i + 1, len(val_loader), gpu_time=gpu_time, result=result, average=average_meter.average()))
+
+        if save_img_dir is not None:
+            img = adv_input[0]
+            depth = target[0]
+            save_image(img, os.path.join(save_img_dir, 'imgs', '{}.png'.format(i)))
+            save_image(img, os.path.join(save_img_dir, 'gt', '{}.png'.format(i)))
+
+        if save_img_dir is not None and i > num_imgs_to_save:
+            break
 
     avg = average_meter.average()
 

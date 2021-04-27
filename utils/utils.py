@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
-from dataloaders import kitti_dataloader, nyu_dataloader
+from dataloaders import kitti_dataloader, nyu_dataloader, folder_loader
 from dataloaders.path import Path
 
 cmap = plt.cm.get_cmap('binary_r')
@@ -25,6 +25,10 @@ def parse_command():
     parser.add_argument('--attack', '-a', default=None, type=str)
     parser.add_argument('--adv_training', default=False, type=bool, help='perform adversarial training')
     parser.add_argument('--eval_output_dir', default=None, type=str)
+
+    parser.add_argument('--num_images_to_save', default=100, type=int)
+    parser.add_argument('--save_image_dir', default=None, type=str)
+
     parser.add_argument('--decoder', default='upproj', type=str)
     parser.add_argument('--resnet_layers', default=50, type=int)
     parser.add_argument('--resume',
@@ -93,6 +97,14 @@ def create_loader(args):
 
         train_set = nyu_dataloader.NYUDataset(traindir, type='train', model=args.model)
         val_set = nyu_dataloader.NYUDataset(valdir, type='val', model=args.model)
+
+    elif args.dataset == 'saved_images':
+        if not os.path.exists(args.save_image_dir):
+            print('Val dataset "{}" doesnt existed!'.format(args.save_image_dir))
+            exit(-1)
+
+        train_set = None
+        val_set = folder_loader.FolderDataset(args.save_image_dir, model=args.model)
     else:
         print('no dataset named as ', args.dataset)
         exit(-1)
@@ -101,8 +113,12 @@ def create_loader(args):
         train_set, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True)
 
     if args.dataset == 'kitti':
-        val_loader = torch.utils.data.DataLoader(
-            val_set, batch_size=args.batch_size, num_workers=args.workers, pin_memory=True)
+        if args.save_image_dir is not None:
+            val_loader = torch.utils.data.DataLoader(
+                val_set, batch_size=1, shuffle=False, num_workers=args.workers, pin_memory=True)
+        else:
+            val_loader = torch.utils.data.DataLoader(
+                val_set, batch_size=args.batch_size, shuffle=False, num_workers=args.workers, pin_memory=True)
     else:
         val_loader = torch.utils.data.DataLoader(
             val_set, batch_size=1, shuffle=False, num_workers=args.workers, pin_memory=True)
