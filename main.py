@@ -166,6 +166,9 @@ def main():
         shutil.rmtree(log_path)
     os.makedirs(log_path)
 
+    # save every epoch if doing adversarial training
+    save_every_epoch = args.adv_training
+
     for epoch in range(start_epoch, args.epochs):
 
         # remember change of the learning rate
@@ -197,7 +200,7 @@ def main():
             'model': model,
             'best_result': best_result,
             'optimizer': optimizer,
-        }, is_best, epoch, output_directory)
+        }, is_best, epoch, output_directory, save_every_epoch)
 
         # when rml doesn't fall, reduce learning rate
         if scheduler is not None:
