@@ -8,7 +8,7 @@ from utils import criteria
 class PGD(nn.Module):
     def __init__(self, model, device, loss, norm, eps, alpha, iters, mean=0.5, std=0.5, TI=False, k_=0, test=None):
         super(PGD, self).__init__()
-        assert(2 <= eps <= 10)
+        assert(2 <= eps <= 20)
         assert(norm in [2, 'inf', np.inf])
         self.eps = (eps / 255.0) / std
         self.alpha = (alpha / 255.0) / std

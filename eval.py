@@ -254,6 +254,7 @@ def validate(val_loader, model, segm_model=None, attacker=None):
     avg = average_meter.average()
 
     if args.targeted:
+        print(targeted_metrics['rmse'])
         avg_rmse = sum(targeted_metrics['rmse']) / len(targeted_metrics['rmse'])
         avg_absrel = sum(targeted_metrics['absrel']) / len(targeted_metrics['absrel'])
         avg_log10 = sum(targeted_metrics['log10']) / len(targeted_metrics['log10'])
@@ -287,6 +288,7 @@ def get_adversary(data, target, segm_model=None, attacker=None):
 
         else:
             adv_target = target
+            segm = None
 
         pert_image = attacker(data.cuda(), adv_target.cuda())
     else:
@@ -326,7 +328,8 @@ if __name__ == '__main__':
 
     args = utils.parse_command()
     print(args)
-    print('Targeted_class: {} --- Moved by {}'.format(targeted_class, move_target))
+    if args.targeted:
+        print('Targeted_class: {} --- Moved by {}'.format(targeted_class, move_target))
     mifgsm_params = {'eps': args.epsilon, 'steps': args.iterations, 'decay': 1.0, 'alpha': args.alpha, 'TI': args.g_smooth, 'k': args.k}
     pgd_params = {'norm': 'inf', 'eps': args.epsilon, 'alpha': args.alpha, 'iterations': args.iterations, 'TI': args.g_smooth, 'k': args.k}
 
