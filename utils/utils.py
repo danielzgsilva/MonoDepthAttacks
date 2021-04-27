@@ -113,6 +113,12 @@ def create_loader(args):
 def get_output_directory(args):
     if args.resume and not args.adv_training:
         return os.path.dirname(args.resume)
+    elif args.adv_training:
+        save_dir_root = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+        save_dir_root = os.path.join(save_dir_root, 'result',  args.dataset + "_resnet_" + str(args.resnet_layers) + '_' + args.decoder)
+        save_dir = os.path.join(save_dir_root, 'adv_train',
+                                str(args.attack) + '_' + str(args.epsilon) + '_' + str(args.lr) + '_' + args.loss)
+        return save_dir
     else:
         save_dir_root = os.path.join(os.path.dirname(os.path.abspath(__file__)))
         save_dir_root = os.path.join(save_dir_root, 'result',  args.dataset + "_resnet_" + str(args.resnet_layers) + '_' + args.decoder)
