@@ -189,8 +189,8 @@ def main():
                        result.delta3, result.gpu_time))
 
     if img_merge is not None:
-        img_filename = output_directory + '/eval_results_{}_{}_{}.png'.format(
-                                                                    args.model, args.dataset, args.attack)
+        img_filename = output_directory + '/eval_results_{}_{}_{}_{}.png'.format(
+                                                                    args.model, args.dataset, args.attack, args.targeted)
         utils.save_image(img_merge, img_filename)
 
 

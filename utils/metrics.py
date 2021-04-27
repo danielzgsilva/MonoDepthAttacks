@@ -72,7 +72,7 @@ class Result(object):
         mse = float((torch.pow(abs_diff, 2)).mean())
         rmse = math.sqrt(mse)
         mae = float(abs_diff.mean())
-        lg10 = float((log10(output) - log10(target)).abs().mean())
+        l10 = float((log10(output) - log10(target)).abs().mean())
         absrel = float((abs_diff / target).mean())
 
         maxRatio = torch.max(output / target, target / output)
@@ -88,8 +88,8 @@ class Result(object):
         irmse = math.sqrt((torch.pow(abs_inv_diff, 2)).mean())
         imae = float(abs_inv_diff.mean())
 
-        print('Targeted Results: \n RMSE: {}\nRML: {}\nLog10: {}'.format(rmse, absrel, log10))
-        return rmse, absrel, log10
+        print('Targeted Results: \n RMSE: {}\nRML: {}\nLog10: {}'.format(rmse, absrel, l10))
+        return rmse, absrel, l10
 
 class AverageMeter(object):
     def __init__(self):
