@@ -86,6 +86,8 @@ def main():
 
         if args.dataset == 'kitti':
             model = UnetAdaptiveBins.build(n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_KITTI)
+        elif args.dataset == 'saved_images':
+            model = UnetAdaptiveBins.build(n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_KITTI)
         elif args.dataset == 'nyu':
             model = UnetAdaptiveBins.build(n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_NYU)
         else:
@@ -97,6 +99,9 @@ def main():
         attention_hooks = True
 
         if args.dataset == 'kitti': 
+            scale = 0.00006016
+            shift = 0.00579
+        elif args.dataset == 'saved_images':
             scale = 0.00006016
             shift = 0.00579
         elif args.dataset == 'nyu':
@@ -319,6 +324,8 @@ def post_process(depth,):
     if args.model == 'adabins':
         # upscale adabins output to original size
         if args.dataset == 'kitti':
+            depth = F.interpolate(depth, size=(228, 912), mode='bilinear')
+        elif args.dataset == 'saved_images':
             depth = F.interpolate(depth, size=(228, 912), mode='bilinear')
         elif args.dataset == 'nyu':
             depth = F.interpolate(depth, size=(480, 640), mode='bilinear')
