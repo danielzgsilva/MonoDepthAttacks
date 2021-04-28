@@ -103,7 +103,7 @@ def create_loader(args):
             print('Val dataset "{}" doesnt existed!'.format(args.save_image_dir))
             exit(-1)
 
-        train_set = None
+        train_set = folder_loader.FolderDataset(args.save_image_dir, model=args.model)
         val_set = folder_loader.FolderDataset(args.save_image_dir, model=args.model)
     else:
         print('no dataset named as ', args.dataset)
