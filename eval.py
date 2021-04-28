@@ -346,7 +346,7 @@ def post_process(depth,):
 
 
 if __name__ == '__main__':
-    targeted_class = 21 # cars
+    targeted_class = 26 # cars
 
     args = utils.parse_command()
     print(args)

@@ -66,7 +66,7 @@ class Result(object):
         self.imae = float(abs_inv_diff.mean())
 
     def targeted_eval(self, output, target, segm):
-        valid_mask = (segm == 21)
+        valid_mask = (segm == 26)
         output = output[valid_mask]
         target = target[valid_mask]
 
