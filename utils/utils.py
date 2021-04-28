@@ -62,6 +62,7 @@ def parse_command():
     parser.add_argument('--iterations', default=10, type=int)
     parser.add_argument('--alpha', default=1.0, type=float)
     parser.add_argument('--k', default=5, type=float)
+    parser.add_argument('--move_target', default=0, type=float)
 
 
     args = parser.parse_args()
