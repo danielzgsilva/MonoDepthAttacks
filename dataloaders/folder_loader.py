@@ -17,7 +17,7 @@ class FolderDataset(Dataset):
         self.transform = transforms.Compose([transforms.ToTensor()])
 
     def __len__(self):
-        return len(self.total_imgs)
+        return len(self.imgs)
 
     def __getitem__(self, idx):
         img_file = os.path.join(self.main_dir, 'imgs', self.imgs[idx])
