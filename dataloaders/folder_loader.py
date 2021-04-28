@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import torch
 from torch.utils.data import Dataset
 from PIL import Image
 from torchvision import transforms
@@ -28,5 +29,7 @@ class FolderDataset(Dataset):
 
         depth = Image.open(gt_file)
         tensor_depth = self.transform(depth)
+
+        tensor_depth = tensor_depth[0]
 
         return tensor_image, tensor_depth

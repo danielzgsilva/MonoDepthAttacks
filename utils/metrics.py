@@ -37,6 +37,9 @@ class Result(object):
         self.data_time, self.gpu_time = data_time, gpu_time
 
     def evaluate(self, output, target):
+        if len(output.size()) > len(target.size()):
+            target = target.unsqueeze(0)
+
         valid_mask = target > 0
         output = output[valid_mask]
         target = target[valid_mask]
