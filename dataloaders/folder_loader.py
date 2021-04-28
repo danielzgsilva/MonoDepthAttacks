@@ -29,10 +29,6 @@ class FolderDataset(Dataset):
 
         depth = Image.open(gt_file)
         tensor_depth = self.transform(depth)
-        print(tensor_depth.size())
-        print(torch.equal(tensor_depth[0], tensor_depth[1]))
-        print(torch.allclose(tensor_depth[0], tensor_depth[1]))
-        print(torch.allclose(tensor_depth[2], tensor_depth[1]))
 
         tensor_depth = tensor_depth[0]
 
