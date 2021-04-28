@@ -189,8 +189,8 @@ def main():
                        result.delta3, result.gpu_time))
 
     if img_merge is not None:
-        img_filename = output_directory + '/eval_results_{}_{}_{}_{}.png'.format(
-                                                                    args.model, args.dataset, args.attack, args.targeted)
+        img_filename = output_directory + '/eval_results_{}_{}_{}_{}_{}.png'.format(
+                                                                    args.model, args.dataset, args.attack, args.targeted, args.move_target)
         utils.save_image(img_merge, img_filename)
 
 
@@ -231,9 +231,9 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
         result.evaluate(pred.data, target.data)
         if args.targeted:
             rmse, absrel, log10 = result.targeted_eval(pred.data.squeeze(1), target.data.squeeze(1), segm)
-            targeted_metrics['rmse'].append(rmse)
-            targeted_metrics['absrel'].append(absrel)
-            targeted_metrics['log10'].append(log10)
+            if not torch.isnan(rmse): targeted_metrics['rmse'].append(rmse)
+            if not torch.isnan(absrel): targeted_metrics['absrel'].append(absrel)
+            if not torch.isnan(log10): targeted_metrics['log10'].append(log10)
 
         average_meter.update(result, gpu_time, data_time, input.size(0))
         end = time.time()
@@ -276,7 +276,6 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
     avg = average_meter.average()
 
     if args.targeted:
-        print(targeted_metrics['rmse'])
         avg_rmse = sum(targeted_metrics['rmse']) / len(targeted_metrics['rmse'])
         avg_absrel = sum(targeted_metrics['absrel']) / len(targeted_metrics['absrel'])
         avg_log10 = sum(targeted_metrics['log10']) / len(targeted_metrics['log10'])
