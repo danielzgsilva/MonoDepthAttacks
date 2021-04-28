@@ -231,9 +231,9 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
         result.evaluate(pred.data, target.data)
         if args.targeted:
             rmse, absrel, log10 = result.targeted_eval(pred.data.squeeze(1), target.data.squeeze(1), segm)
-            if not torch.isnan(rmse): targeted_metrics['rmse'].append(rmse)
-            if not torch.isnan(absrel): targeted_metrics['absrel'].append(absrel)
-            if not torch.isnan(log10): targeted_metrics['log10'].append(log10)
+            if rmse != float('nan'): targeted_metrics['rmse'].append(rmse)
+            if absrel != float('nan'): targeted_metrics['absrel'].append(absrel)
+            if log10 != float('nan'): targeted_metrics['log10'].append(log10)
 
         average_meter.update(result, gpu_time, data_time, input.size(0))
         end = time.time()
