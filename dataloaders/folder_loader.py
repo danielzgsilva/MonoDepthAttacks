@@ -22,11 +22,13 @@ class FolderDataset(Dataset):
     def __getitem__(self, idx):
         img_file = os.path.join(self.main_dir, 'imgs', self.imgs[idx])
         gt_file = img_file.replace('imgs', 'gt')
+        print(gt_file)
 
         image = Image.open(img_file).convert("RGB")
         tensor_image = self.transform(image)
 
         depth = Image.open(gt_file)
         tensor_depth = self.transform(depth)
+        print(tensor_depth.size())
 
         return tensor_image, tensor_depth
