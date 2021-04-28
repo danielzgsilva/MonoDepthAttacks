@@ -306,7 +306,7 @@ def get_adversary(data, target, segm_model=None, attacker=None):
             out = segm_model.forward(data.cpu())
             segm = torch.argmax(out, dim=1) + 1
             # segm_mask = torch.zeros_like(segm).float()
-            adv_target = torch.where(segm == targeted_class, target.cpu() * (1 + move_target), target.cpu())
+            adv_target = torch.where(segm == targeted_class, target.cpu() * (1 + args.move_target), target.cpu())
 
         else:
             adv_target = target
@@ -348,12 +348,11 @@ def post_process(depth,):
 
 if __name__ == '__main__':
     targeted_class = 21 # cars
-    move_target = -0.5
 
     args = utils.parse_command()
     print(args)
     if args.targeted:
-        print('Targeted_class: {} --- Moved by {}'.format(targeted_class, move_target))
+        print('Targeted_class: {} --- Moved by {}'.format(targeted_class, args.move_target))
     mifgsm_params = {'eps': args.epsilon, 'steps': args.iterations, 'decay': 1.0, 'alpha': args.alpha, 'TI': args.g_smooth, 'k': args.k}
     pgd_params = {'norm': 'inf', 'eps': args.epsilon, 'alpha': args.alpha, 'iterations': args.iterations, 'TI': args.g_smooth, 'k': args.k}
 

@@ -88,7 +88,7 @@ class Result(object):
         irmse = math.sqrt((torch.pow(abs_inv_diff, 2)).mean())
         imae = float(abs_inv_diff.mean())
 
-        print('Targeted Results: \n RMSE: {}\nRML: {}\nLog10: {}'.format(rmse, absrel, l10))
+        # print('Targeted Results: \n RMSE: {}\nRML: {}\nLog10: {}'.format(rmse, absrel, l10))
         return rmse, absrel, l10
 
 class AverageMeter(object):
