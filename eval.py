@@ -268,6 +268,7 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
             img = adv_input[0]
             depth = target[0]
             save_image(img, os.path.join(save_img_dir, 'imgs', '{}.png'.format(i)))
+            print(depth.size())
             save_image(depth, os.path.join(save_img_dir, 'gt', '{}.png'.format(i)))
 
         if save_img_dir is not None and i > num_imgs_to_save:

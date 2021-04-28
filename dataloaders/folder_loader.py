@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import torch
 from torch.utils.data import Dataset
 from PIL import Image
 from torchvision import transforms
@@ -22,7 +23,6 @@ class FolderDataset(Dataset):
     def __getitem__(self, idx):
         img_file = os.path.join(self.main_dir, 'imgs', self.imgs[idx])
         gt_file = img_file.replace('imgs', 'gt')
-        print(gt_file)
 
         image = Image.open(img_file).convert("RGB")
         tensor_image = self.transform(image)
@@ -30,5 +30,10 @@ class FolderDataset(Dataset):
         depth = Image.open(gt_file)
         tensor_depth = self.transform(depth)
         print(tensor_depth.size())
+        print(torch.equal(tensor_depth[0], tensor_depth[1]))
+        print(torch.allclose(tensor_depth[0], tensor_depth[1]))
+        print(torch.allclose(tensor_depth[2], tensor_depth[1]))
+
+        tensor_depth = tensor_depth[0]
 
         return tensor_image, tensor_depth
