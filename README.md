@@ -3,7 +3,7 @@
 ### Adversarial attacks on state of the art monocular depth estimation networks
 -  Contains FCRN, AdaBins, and DPT depth estimation networks
 -  Implements PGD, FGSM, and MI-FGSM adversarial attacks
-  -  non-targeted and targeted versions with L1, L2, and Reverse Huber loss options
+    -  Non-targeted and targeted versions with L1, L2, and Reverse Huber loss options
 -  Support for KITTI and NYUv2 depth datasets
 
 FCRN reference: https://arxiv.org/abs/1606.00373  
@@ -36,7 +36,7 @@ Examples for training an FCRN model from scratch:
 `python main.py --dataset kitti --lr 0.001 --epochs 20 --optim adam --resnet_layers 50 --loss berhu`  
 `python main.py --dataset nyu --lr 0.001 --epochs 20 --optim adam --resnet_layers 18 --loss l1`  
 
-Example for finetuning a FCRN model via FGSM adversarial training:
+Example for finetuning a FCRN model via FGSM adversarial training:  
 `python main.py --model resnet --dataset kitti --lr 0.0001 --epochs 10 --optim adam --resnet_layers 50 --loss l2 --resume /path/to/pretrained/model --adv_training True --attack mifgsm --iterations 1 --epsilon 5 --alpha 5`  
 
 We do not support training AdaBins or DPT from scratch, but pretrained models can be found here:  
