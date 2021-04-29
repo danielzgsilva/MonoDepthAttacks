@@ -51,7 +51,7 @@ Attacking and evaluating a given model:
 `python eval.py --dataset nyu --model adabins --resume /path/to/model --attack pgd --epsilon 3 --iterations 7 --loss l1`  
 `python eval.py --dataset kitti --model dpt --resume /path/to/model --attack mifgsm --targeted True  --move_target 1.0`  
 
-(Note that the above are simply examples and do not necesarily result in optimal performance)  
+(Note that the above are simply examples and do not necessarily result in optimal performance)  
 
 List of available arguments:
 - **--num_agents** | number of agents to spawn into the world
