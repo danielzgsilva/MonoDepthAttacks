@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
- @Time    : 2019/1/21 15:25
- @Author  : Wang Xin
- @Email   : wangxin_buaa@163.com
-"""
+__author__ = 'danielzgsilva', 'kesaroid'
 
 from datetime import datetime
 import shutil
@@ -30,8 +25,6 @@ from DPT.dpt.models import DPTSegmentationModel
 from attacks.MIFGSM import MIFGSM
 from attacks.pgd import PGD
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
-
 
 def main():
     global args, best_result, output_directory
@@ -41,6 +34,7 @@ def main():
     # set random seed
     torch.manual_seed(args.manual_seed)
 
+    # Use GPU if available
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
 
@@ -48,6 +42,7 @@ def main():
     else:
         print("Let's use GPU ", torch.cuda.current_device())
 
+    # Validation dataloader
     _, val_loader = utils.create_loader(args)
     del _
 
@@ -58,16 +53,13 @@ def main():
             "=> no checkpoint found at '{}'".format(args.resume)
         print("=> loading checkpoint '{}'".format(args.resume))
 
+    # Choose the model to be loaded
     if args.model == 'resnet':
         checkpoint = torch.load(args.resume)
 
         start_epoch = checkpoint['epoch'] + 1
         best_result = checkpoint['best_result']
         optimizer = checkpoint['optimizer']
-
-        # model_dict = checkpoint['model'].module.state_dict()  # to load the trained model using multi-GPUs
-        # model = FCRN.ResNet(output_size=train_loader.dataset.output_size, pretrained=False)
-        # model.load_state_dict(model_dict)
 
         # solve 'out of memory'
         model = checkpoint['model']
@@ -76,29 +68,34 @@ def main():
 
         # clear memory
         del checkpoint
-        # del model_dict
 
+    # Adabins model
     elif args.model == "adabins":
         MIN_DEPTH = 1e-3
         MAX_DEPTH_NYU = 10
         MAX_DEPTH_KITTI = 80
         N_BINS = 256
 
+        # Load model w.r.t dataset
         if args.dataset == 'kitti':
-            model = UnetAdaptiveBins.build(n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_KITTI)
+            model = UnetAdaptiveBins.build(
+                n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_KITTI)
         elif args.dataset == 'saved_images':
-            model = UnetAdaptiveBins.build(n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_KITTI)
+            model = UnetAdaptiveBins.build(
+                n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_KITTI)
         elif args.dataset == 'nyu':
-            model = UnetAdaptiveBins.build(n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_NYU)
+            model = UnetAdaptiveBins.build(
+                n_bins=N_BINS, min_val=MIN_DEPTH, max_val=MAX_DEPTH_NYU)
         else:
             assert (False, "{} dataset not supported".format(args.dataset))
 
         model, _, _ = model_io.load_checkpoint(args.resume, model)
-    
+
+    # DPT-hybrid model
     elif args.model == "dpt":
         attention_hooks = True
 
-        if args.dataset == 'kitti': 
+        if args.dataset == 'kitti':
             scale = 0.00006016
             shift = 0.00579
         elif args.dataset == 'saved_images':
@@ -106,7 +103,7 @@ def main():
             shift = 0.00579
         elif args.dataset == 'nyu':
             scale = 0.000305
-            shift = 0.1378 
+            shift = 0.1378
 
         model = DPTDepthModel(
             path=args.resume,
@@ -117,13 +114,14 @@ def main():
             non_negative=True,
             enable_attention_hooks=attention_hooks,
         )
-
+        
+        # Targeted attack: Load Segmentation model
         if args.targeted:
             segm_model = DPTSegmentationModel(
-                    150,
-                    path='DPT/weights/dpt_hybrid-ade20k-53898607.pt',
-                    backbone="vitb_rn50_384",
-                    )
+                150,
+                path='DPT/weights/dpt_hybrid-ade20k-53898607.pt',
+                backbone="vitb_rn50_384",
+            )
 
         print('model {} loaded'.format(args.resume))
     else:
@@ -132,6 +130,7 @@ def main():
     torch.cuda.empty_cache()
     model = model.cuda()
 
+    # Choose attackers
     attacker = None
     if args.attack == 'mifgsm':
         print('attacking with {}'.format(args.attack))
@@ -144,16 +143,16 @@ def main():
                           k_=mifgsm_params['k'],
                           targeted=args.targeted,
                           test=args.model)
-    elif args.attack =='pgd':
+    elif args.attack == 'pgd':
         print('attacking with {}'.format(args.attack))
         attacker = PGD(model, "cuda:0", args.loss,
-                        norm=pgd_params['norm'],
-                        eps=pgd_params['eps'],
-                        alpha=pgd_params['alpha'],
-                        iters=pgd_params['iterations'],
-                        TI=pgd_params['TI'],
-                        k_=mifgsm_params['k'],
-                        test=args.model)
+                       norm=pgd_params['norm'],
+                       eps=pgd_params['eps'],
+                       alpha=pgd_params['alpha'],
+                       iters=pgd_params['iterations'],
+                       TI=pgd_params['TI'],
+                       k_=mifgsm_params['k'],
+                       test=args.model)
     else:
         print('no attack')
 
@@ -161,13 +160,15 @@ def main():
     if args.eval_output_dir is not None:
         output_directory = args.eval_output_dir
     else:
-        output_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'eval_results')
+        output_directory = os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), 'eval_results')
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
+    # Save evaluation results
     eval_txt = os.path.join(output_directory, 'eval_results_{}_{}_{}.txt'.format(
-                                                                        args.model, args.dataset, args.attack))
+        args.model, args.dataset, args.attack))
 
     # make dirs to save imgs unless we're testing on already saved imgs
     if args.save_image_dir is not None and args.dataset != 'saved_images':
@@ -180,17 +181,18 @@ def main():
             os.makedirs(gt_dir)
 
     # evaluate on validation set
-    result, img_merge = validate(val_loader, model, segm_model, attacker, args.save_image_dir, args.num_images_to_save)
+    result, img_merge = validate(
+        val_loader, model, segm_model, attacker, args.save_image_dir, args.num_images_to_save)
 
     with open(eval_txt, 'w') as txtfile:
         txtfile.write(
             "rmse={:.3f}, rml={:.3f}, log10={:.3f}, d1={:.3f}, d2={:.3f}, dd31={:.3f}, t_gpu={:.4f}".
-                format(result.rmse, result.absrel, result.lg10, result.delta1, result.delta2,
-                       result.delta3, result.gpu_time))
+            format(result.rmse, result.absrel, result.lg10, result.delta1, result.delta2,
+                   result.delta3, result.gpu_time))
 
     if img_merge is not None:
         img_filename = output_directory + '/eval_results_{}_{}_{}_{}_{}.png'.format(
-                                                                    args.model, args.dataset, args.attack, args.targeted, args.move_target)
+            args.model, args.dataset, args.attack, args.targeted, args.move_target)
         utils.save_image(img_merge, img_filename)
 
 
@@ -208,6 +210,7 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
     for i, (input, target) in enumerate(val_loader):
         input, target = input.cuda(), target.cuda()
 
+        # Get Adversary function
         adv_input, segm = get_adversary(input, target, segm_model, attacker)
 
         torch.cuda.synchronize()
@@ -221,6 +224,7 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
             else:
                 pred = model(adv_input)
 
+        # Post-processing for few of the models
         pred = post_process(pred)
 
         torch.cuda.synchronize()
@@ -230,10 +234,14 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
         result = Result()
         result.evaluate(pred.data, target.data)
         if args.targeted:
-            rmse, absrel, log10 = result.targeted_eval(pred.data.squeeze(1), target.data.squeeze(1), segm)
-            if rmse != float('nan'): targeted_metrics['rmse'].append(rmse)
-            if absrel != float('nan'): targeted_metrics['absrel'].append(absrel)
-            if log10 != float('nan'): targeted_metrics['log10'].append(log10)
+            rmse, absrel, log10 = result.targeted_eval(
+                pred.data.squeeze(1), target.data.squeeze(1), segm)
+            if rmse != float('nan'):
+                targeted_metrics['rmse'].append(rmse)
+            if absrel != float('nan'):
+                targeted_metrics['absrel'].append(absrel)
+            if log10 != float('nan'):
+                targeted_metrics['log10'].append(log10)
 
         average_meter.update(result, gpu_time, data_time, input.size(0))
         end = time.time()
@@ -261,14 +269,16 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
                   'Delta1={result.delta1:.3f}({average.delta1:.3f}) '
                   'Delta2={result.delta2:.3f}({average.delta2:.3f}) '
                   'Delta3={result.delta3:.3f}({average.delta3:.3f})'.format(
-                i + 1, len(val_loader), gpu_time=gpu_time, result=result, average=average_meter.average()))
+                      i + 1, len(val_loader), gpu_time=gpu_time, result=result, average=average_meter.average()))
 
         # save images only if we're not testing on already saved images
         if save_img_dir is not None and args.dataset != 'saved_images':
             img = adv_input[0]
             depth = target[0]
-            save_image(img, os.path.join(save_img_dir, 'imgs', '{}.png'.format(i)))
-            save_image(depth, os.path.join(save_img_dir, 'gt', '{}.png'.format(i)))
+            save_image(img, os.path.join(
+                save_img_dir, 'imgs', '{}.png'.format(i)))
+            save_image(depth, os.path.join(
+                save_img_dir, 'gt', '{}.png'.format(i)))
 
         if save_img_dir is not None and i > num_imgs_to_save:
             break
@@ -276,15 +286,18 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
     avg = average_meter.average()
 
     if args.targeted:
-        avg_rmse = sum(targeted_metrics['rmse']) / len(targeted_metrics['rmse'])
-        avg_absrel = sum(targeted_metrics['absrel']) / len(targeted_metrics['absrel'])
-        avg_log10 = sum(targeted_metrics['log10']) / len(targeted_metrics['log10'])
+        avg_rmse = sum(targeted_metrics['rmse']) / \
+            len(targeted_metrics['rmse'])
+        avg_absrel = sum(targeted_metrics['absrel']) / \
+            len(targeted_metrics['absrel'])
+        avg_log10 = sum(targeted_metrics['log10']) / \
+            len(targeted_metrics['log10'])
 
         print('\n*\n'
-          'RMSE={}\n'
-          'Rel={}\n'
-          'Log10={}\n'.format(avg_rmse, avg_absrel, avg_log10))
-              
+              'RMSE={}\n'
+              'Rel={}\n'
+              'Log10={}\n'.format(avg_rmse, avg_absrel, avg_log10))
+
     print('\n*\n'
           'RMSE={average.rmse:.3f}\n'
           'Rel={average.absrel:.3f}\n'
@@ -293,7 +306,7 @@ def validate(val_loader, model, segm_model=None, attacker=None, save_img_dir=Non
           'Delta2={average.delta2:.3f}\n'
           'Delta3={average.delta3:.3f}\n'
           't_GPU={time:.3f}\n'.format(
-        average=avg, time=avg.gpu_time))
+              average=avg, time=avg.gpu_time))
 
     return avg, img_merge
 
@@ -302,15 +315,17 @@ def get_adversary(data, target, segm_model=None, attacker=None):
     if attacker is not None:
         if args.targeted:
             segm_model.eval()
+            # Get Segmentation results
             out = segm_model.forward(data.cpu())
             segm = torch.argmax(out, dim=1) + 1
-            # segm_mask = torch.zeros_like(segm).float()
-            adv_target = torch.where(segm == targeted_class, target.cpu() * (1 + args.move_target), target.cpu())
+            # Find Depth target using M and alpha for a target class
+            adv_target = torch.where(
+                segm == targeted_class, target.cpu() * (1 + args.move_target), target.cpu())
 
         else:
             adv_target = target
             segm = None
-
+        # Attack object: outputs perturbated image
         pert_image = attacker(data.cuda(), adv_target.cuda())
     else:
         pert_image = data
@@ -328,15 +343,8 @@ def post_process(depth,):
             depth = F.interpolate(depth, size=(228, 912), mode='bilinear')
         elif args.dataset == 'nyu':
             depth = F.interpolate(depth, size=(480, 640), mode='bilinear')
-    
+
     elif args.model == 'dpt':
-        
-        # Only helps for better visualization
-        # if args.dataset == 'kitti':
-        #     depth *= 256
-        # elif args.dataset == "nyu":
-        #     depth *= 1000.0
-        
         depth = depth.unsqueeze(1)
 
     else:
@@ -346,14 +354,19 @@ def post_process(depth,):
 
 
 if __name__ == '__main__':
-    targeted_class = 26 # cars
+    # Target class for the KITTI dataset for Targeted attacks
+    targeted_class = 26  # cars
 
     args = utils.parse_command()
     print(args)
     if args.targeted:
         print('Targeted_class: {} --- Moved by {}'.format(targeted_class, args.move_target))
-    mifgsm_params = {'eps': args.epsilon, 'steps': args.iterations, 'decay': 1.0, 'alpha': args.alpha, 'TI': args.g_smooth, 'k': args.k}
-    pgd_params = {'norm': 'inf', 'eps': args.epsilon, 'alpha': args.alpha, 'iterations': args.iterations, 'TI': args.g_smooth, 'k': args.k}
+    
+    # PGD and MIFGSM parameters from arguments
+    mifgsm_params = {'eps': args.epsilon, 'steps': args.iterations,
+                     'decay': 1.0, 'alpha': args.alpha, 'TI': args.g_smooth, 'k': args.k}
+    pgd_params = {'norm': 'inf', 'eps': args.epsilon, 'alpha': args.alpha,
+                  'iterations': args.iterations, 'TI': args.g_smooth, 'k': args.k}
 
     best_result = Result()
     best_result.set_to_worst()

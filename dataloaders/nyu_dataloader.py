@@ -1,5 +1,6 @@
+__author__ = 'danielzgsilva'
+
 import numpy as np
-# import dataloaders.transforms as transforms
 from dataloaders.dataloader import MyDataloader
 
 from torchvision import transforms
@@ -22,7 +23,6 @@ class NYUDataset(MyDataloader):
             transforms.RandomRotation(degrees=10),
             transforms.CenterCrop(self.output_size),
             transforms.RandomHorizontalFlip(p=0.5),
-            #transforms.ColorJitter(),
             transforms.ToTensor()
         ])
 
@@ -34,8 +34,6 @@ class NYUDataset(MyDataloader):
     def val_transform(self, rgb, depth):
         transform = transforms.Compose([
             transforms.ToPILImage(),
-            #transforms.Resize((240, 320)),
-            #transforms.CenterCrop(self.output_size),
             transforms.ToTensor()
         ])
 

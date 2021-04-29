@@ -15,6 +15,8 @@ class MIFGSM(nn.Module):
     https://arxiv.org/abs/1710.06081
 
     # Only Linf implemented
+    # L1, L2 and Huber loss implemented
+    # Targeted attack implemented
 
     Arguments:
         model: model to attack.
@@ -60,13 +62,10 @@ class MIFGSM(nn.Module):
         labels = labels.clone().detach().to(self.device)
         # labels = self._transform_label(images, labels)
 
-        # print(images.size())
-        # print(labels.size())
-
         momentum = torch.zeros_like(images).detach().to(self.device)
 
         adv_images = images.clone().detach()
-        
+
         for i in range(self.steps):
             adv_images.requires_grad = True
             if self.test == 'dpt':
@@ -74,13 +73,14 @@ class MIFGSM(nn.Module):
                 outputs = torch.unsqueeze(outputs, 1)
             elif self.test == 'adabins':
                 _, outputs = self.model(adv_images)
-                labels = F.interpolate(labels, size=(114, 456), mode='bilinear')
+                labels = F.interpolate(
+                    labels, size=(114, 456), mode='bilinear')
             else:
                 outputs = self.model(adv_images)
             # print(outputs.shape, labels.shape)
             cost = self._targeted * self.loss(outputs, labels)
-            
-            grad = torch.autograd.grad(cost, adv_images, 
+
+            grad = torch.autograd.grad(cost, adv_images,
                                        retain_graph=False, create_graph=False)[0]
 
             if self.TI:
@@ -92,8 +92,10 @@ class MIFGSM(nn.Module):
             momentum = grad
 
             adv_images = adv_images.detach() - self.alpha*grad.sign()
-            delta = torch.clamp(adv_images - images, min=-self.eps, max=self.eps)
-            
-            adv_images = torch.max(torch.min(adv_images, images + self.eps), images - self.eps)
+            delta = torch.clamp(adv_images - images,
+                                min=-self.eps, max=self.eps)
+
+            adv_images = torch.max(
+                torch.min(adv_images, images + self.eps), images - self.eps)
 
         return adv_images

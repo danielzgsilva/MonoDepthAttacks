@@ -5,7 +5,23 @@ from attacks.translation_invariance import GaussianSmooth
 import numpy as np
 from utils import criteria
 
+
 class PGD(nn.Module):
+    """
+    PGD from the paper 'Towards Deep Learning Models Resistant to Adversarial Attacks'
+    https://arxiv.org/pdf/1706.06083.pdf
+
+    # Norms Linf or L2
+    # L1, L2 and Huber loss implemented
+
+    Arguments:
+        model: model to attack.
+        eps: maximum perturbation
+        decay: momentum factor
+        steps: number of iterations
+
+    """
+
     def __init__(self, model, device, loss, norm, eps, alpha, iters, mean=0.5, std=0.5, TI=False, k_=0, test=None):
         super(PGD, self).__init__()
         assert(2 <= eps <= 20)
@@ -45,7 +61,8 @@ class PGD(nn.Module):
                 outputs = torch.unsqueeze(outputs, 1)
             elif self.test == 'adabins':
                 _, outputs = self.model(_adv)
-                labels = F.interpolate(labels, size=(114, 456), mode='bilinear')
+                labels = F.interpolate(
+                    labels, size=(114, 456), mode='bilinear')
             else:
                 outputs = self.model(_adv)
 
@@ -62,7 +79,8 @@ class PGD(nn.Module):
 
             elif self.norm == 2:
                 ind = tuple(range(1, len(images.shape)))
-                grad = grad / (torch.sqrt(torch.sum(grad * grad, dim=ind, keepdim=True)) + 10e-8)
+                grad = grad / \
+                    (torch.sqrt(torch.sum(grad * grad, dim=ind, keepdim=True)) + 10e-8)
 
             assert(images.shape == grad.shape)
 
@@ -70,14 +88,17 @@ class PGD(nn.Module):
 
             # project back onto Lp ball
             if self.norm in ["inf", np.inf]:
-                adv = torch.max(torch.min(adv, images + self.eps), images - self.eps)
+                adv = torch.max(
+                    torch.min(adv, images + self.eps), images - self.eps)
 
             elif self.norm == 2:
                 delta = adv - images
 
-                mask = delta.view(delta.shape[0], -1).norm(self.norm, dim=1) <= self.eps
+                mask = delta.view(
+                    delta.shape[0], -1).norm(self.norm, dim=1) <= self.eps
 
-                scaling_factor = delta.view(delta.shape[0], -1).norm(self.norm, dim=1)
+                scaling_factor = delta.view(
+                    delta.shape[0], -1).norm(self.norm, dim=1)
                 scaling_factor[mask] = self.eps
 
                 delta *= self.eps / scaling_factor.view(-1, 1, 1, 1)
@@ -87,5 +108,3 @@ class PGD(nn.Module):
             adv = adv.clamp(self.lower_lim, self.upper_lim)
 
         return adv.detach()
-
-

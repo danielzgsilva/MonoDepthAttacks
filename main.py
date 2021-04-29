@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
- @Time    : 2019/1/21 15:25
- @Author  : Wang Xin
- @Email   : wangxin_buaa@163.com
-"""
+__author__ = 'danielzgsilva'
 
 from datetime import datetime
 import shutil
@@ -21,9 +16,6 @@ from utils.metrics import AverageMeter, Result
 
 from attacks.MIFGSM import MIFGSM
 from attacks.pgd import PGD
-
-
-# os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # use single GPU
 
 
 def main():
@@ -58,14 +50,11 @@ def main():
         best_result = checkpoint['best_result']
         optimizer = checkpoint['optimizer']
 
-        # model_dict = checkpoint['model'].module.state_dict()  # to load the trained model using multi-GPUs
-        # model = FCRN.ResNet(output_size=train_loader.dataset.output_size, pretrained=False)
-        # model.load_state_dict(model_dict)
-
         # solve 'out of memory'
         model = checkpoint['model']
 
-        print("=> loaded checkpoint (epoch {})".format(checkpoint['epoch']), flush=True)
+        print("=> loaded checkpoint (epoch {})".format(
+            checkpoint['epoch']), flush=True)
 
         # clear memory
         del checkpoint
@@ -73,7 +62,8 @@ def main():
         torch.cuda.empty_cache()
     else:
         print("=> creating Model from scratch")
-        model = FCRN.ResNet(layers=args.resnet_layers, output_size=train_loader.dataset.output_size)
+        model = FCRN.ResNet(layers=args.resnet_layers,
+                            output_size=train_loader.dataset.output_size)
         start_epoch = 0
 
         # different modules have different learning rate
@@ -81,9 +71,11 @@ def main():
                         {'params': model.get_10x_lr_params(), 'lr': args.lr * 10}]
 
         if args.optim == 'sgd':
-            optimizer = torch.optim.SGD(train_params, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+            optimizer = torch.optim.SGD(
+                train_params, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
         elif args.optim == 'adam':
-            optimizer = torch.optim.Adam(train_params, lr=args.lr, weight_decay=args.weight_decay)
+            optimizer = torch.optim.Adam(
+                train_params, lr=args.lr, weight_decay=args.weight_decay)
         else:
             assert(False, "{} optim not supported".format(args.optim))
 
@@ -119,17 +111,21 @@ def main():
         else:
             assert(False, "{} attack not supported".format(args.attack))
 
-        print('performing adversarial training with {} attack and {} loss'.format(args.attack, args.loss), flush=True)
+        print('performing adversarial training with {} attack and {} loss'.format(
+            args.attack, args.loss), flush=True)
     else:
         print('performing standard training with {} loss'.format(args.loss))
 
     # when training, use reduceLROnPlateau to reduce learning rate
     if args.scheduler == 'plateau':
-        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=args.lr_patience)
+        scheduler = lr_scheduler.ReduceLROnPlateau(
+            optimizer, 'min', patience=args.lr_patience)
     elif args.scheduler == 'cyclic':
-        scheduler = lr_scheduler.CyclicLR(optimizer, base_lr=args.lr, max_lr=args.lr * 100)
+        scheduler = lr_scheduler.CyclicLR(
+            optimizer, base_lr=args.lr, max_lr=args.lr * 100)
     elif args.scheduler == 'cosine':
-        scheduler = lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=2, eta_min=0.000001, T_mult=2)
+        scheduler = lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer, T_0=2, eta_min=0.000001, T_mult=2)
     else:
         scheduler = None
 
@@ -175,8 +171,10 @@ def main():
         for i, param_group in enumerate(optimizer.param_groups):
             old_lr = float(param_group['lr'])
 
-        train(train_loader, model, criterion, optimizer, epoch, attacker)  # train for one epoch
-        result, img_merge = validate(val_loader, model, epoch)  # evaluate on validation set
+        train(train_loader, model, criterion, optimizer,
+              epoch, attacker)  # train for one epoch
+        # evaluate on validation set
+        result, img_merge = validate(val_loader, model, epoch)
 
         # remember best rmse and save checkpoint
         is_best = result.rmse < best_result.rmse
@@ -186,9 +184,9 @@ def main():
                 txtfile.write(
                     "epoch={}, rmse={:.3f}, rml={:.3f}, log10={:.3f}, d1={:.3f}, d2={:.3f}, dd31={:.3f}, "
                     "t_gpu={:.4f}".
-                        format(epoch, result.rmse, result.absrel, result.lg10, result.delta1, result.delta2,
-                               result.delta3,
-                               result.gpu_time))
+                    format(epoch, result.rmse, result.absrel, result.lg10, result.delta1, result.delta2,
+                           result.delta3,
+                           result.gpu_time))
             if img_merge is not None:
                 img_filename = output_directory + '/comparison_best.png'
                 utils.save_image(img_merge, img_filename)
@@ -261,8 +259,8 @@ def train(train_loader, model, criterion, optimizer, epoch, attacker):
                   'Delta1={result.delta1:.3f}({average.delta1:.3f}) '
                   'Delta2={result.delta2:.3f}({average.delta2:.3f}) '
                   'Delta3={result.delta3:.3f}({average.delta3:.3f})'.format(
-                epoch, i + 1, len(train_loader), data_time=data_time,
-                gpu_time=gpu_time, Loss=loss.item(), result=result, average=average_meter.average()), flush=True)
+                      epoch, i + 1, len(train_loader), data_time=data_time,
+                      gpu_time=gpu_time, Loss=loss.item(), result=result, average=average_meter.average()), flush=True)
             current_step = epoch * batch_num + i
 
     avg = average_meter.average()
@@ -326,7 +324,7 @@ def validate(val_loader, model, epoch):
                   'Delta1={result.delta1:.3f}({average.delta1:.3f}) '
                   'Delta2={result.delta2:.3f}({average.delta2:.3f}) '
                   'Delta3={result.delta3:.3f}({average.delta3:.3f})'.format(
-                i + 1, len(val_loader), gpu_time=gpu_time, result=result, average=average_meter.average()))
+                      i + 1, len(val_loader), gpu_time=gpu_time, result=result, average=average_meter.average()))
 
     avg = average_meter.average()
 
@@ -338,7 +336,7 @@ def validate(val_loader, model, epoch):
           'Delta2={average.delta2:.3f}\n'
           'Delta3={average.delta3:.3f}\n'
           't_GPU={time:.3f}\n'.format(
-        average=avg, time=avg.gpu_time), flush=True)
+              average=avg, time=avg.gpu_time), flush=True)
 
     return avg, img_merge
 
@@ -353,8 +351,10 @@ if __name__ == '__main__':
     args = utils.parse_command()
     print(args)
 
-    mifgsm_params = {'eps': args.epsilon, 'steps': args.iterations, 'decay': 1.0, 'alpha': args.alpha, 'TI': TI, 'k': k}
-    pgd_params = {'norm': 'inf', 'eps': args.epsilon, 'alpha': args.alpha, 'iterations': args.iterations, 'TI': TI, 'k': k}
+    mifgsm_params = {'eps': args.epsilon, 'steps': args.iterations,
+                     'decay': 1.0, 'alpha': args.alpha, 'TI': TI, 'k': k}
+    pgd_params = {'norm': 'inf', 'eps': args.epsilon, 'alpha': args.alpha,
+                  'iterations': args.iterations, 'TI': TI, 'k': k}
 
     best_result = Result()
     best_result.set_to_worst()

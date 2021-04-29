@@ -94,6 +94,7 @@ class Result(object):
         # print('Targeted Results: \n RMSE: {}\nRML: {}\nLog10: {}'.format(rmse, absrel, l10))
         return rmse, absrel, l10
 
+
 class AverageMeter(object):
     def __init__(self):
         self.reset()
@@ -127,8 +128,10 @@ class AverageMeter(object):
         avg = Result()
         avg.update(
             self.sum_irmse / self.count, self.sum_imae / self.count,
-            self.sum_mse / self.count, self.sum_rmse / self.count, self.sum_mae / self.count,
+            self.sum_mse / self.count, self.sum_rmse /
+            self.count, self.sum_mae / self.count,
             self.sum_absrel / self.count, self.sum_lg10 / self.count,
-            self.sum_delta1 / self.count, self.sum_delta2 / self.count, self.sum_delta3 / self.count,
+            self.sum_delta1 / self.count, self.sum_delta2 /
+            self.count, self.sum_delta3 / self.count,
             self.sum_gpu_time / self.count, self.sum_data_time / self.count)
         return avg

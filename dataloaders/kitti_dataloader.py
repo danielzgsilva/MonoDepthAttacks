@@ -1,3 +1,5 @@
+__author__ = 'danielzgsilva'
+
 import numpy as np
 import os
 from torch.utils.data import Dataset
@@ -11,6 +13,7 @@ class Kittiloader(object):
     param mode: 'train' or 'test'
     param cam: camera id. 2 represents the left cam, 3 represents the right one
     """
+
     def __init__(self, kittiDir, mode, cam=2):
         self.mode = mode
         self.cam = cam
@@ -31,7 +34,7 @@ class Kittiloader(object):
                 data_info = data.split(' ')
 
                 assert cam == 2 or cam == 3, "Panic::Param 'cam' should be 2 or 3"
-                data_idx_select = (0, 1)[cam==3]
+                data_idx_select = (0, 1)[cam == 3]
 
                 self.files.append({
                     "rgb": data_info[data_idx_select],
@@ -72,8 +75,10 @@ class Kittiloader(object):
         return depth
 
     def _read_data(self, item_files):
-        rgb_path = self._check_path(item_files['rgb'], "Cannot find RGB Image ")
-        depth_path = self._check_path(item_files['depth'], "Cannot find depth file ")
+        rgb_path = self._check_path(
+            item_files['rgb'], "Cannot find RGB Image ")
+        depth_path = self._check_path(
+            item_files['depth'], "Cannot find depth file ")
 
         rgb = np.array(Image.open(rgb_path).convert('RGB'))
         depth = self._read_depth(depth_path)
@@ -98,7 +103,7 @@ class KITTIDataset(Dataset):
 
         if self.model == 'dpt':
             self.output_size = (352, 1216)
-        else:    
+        else:
             self.output_size = (228, 912)
 
         if type == 'train':
@@ -132,12 +137,12 @@ class KITTIDataset(Dataset):
             height, width, _ = rgb.shape
             top = height - 352
             left = (width - 1216) // 2
-            rgb = rgb[top : top + 352, left : left + 1216, :]
+            rgb = rgb[top: top + 352, left: left + 1216, :]
 
             height, width = depth.shape
             top = height - 352
             left = (width - 1216) // 2
-            depth = depth[top : top + 352, left : left + 1216]
+            depth = depth[top: top + 352, left: left + 1216]
 
         transform = transforms.Compose([
             transforms.ToPILImage(),
