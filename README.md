@@ -24,9 +24,9 @@ Clone this repo:
 ```git clone https://github.com/danielzgsilva/MonoDepthAttacks```  
 ```cd MonoDepthAttacks```
 
-Download the NYUv2 dataset: http://horatio.cs.nyu.edu/mit/silberman/nyu_depth_v2/nyu_depth_v2_labeled.mat.
-Download the KITTI Raw dataset: http://www.cvlibs.net/datasets/kitti/raw_data.php
-Download the KITTI Depth dataset: http://www.cvlibs.net/datasets/kitti/eval_depth.php?benchmark=depth_prediction
+Download the NYUv2 dataset: http://horatio.cs.nyu.edu/mit/silberman/nyu_depth_v2/nyu_depth_v2_labeled.mat  
+Download the KITTI Raw dataset: http://www.cvlibs.net/datasets/kitti/raw_data.php  
+Download the KITTI Depth dataset: http://www.cvlibs.net/datasets/kitti/eval_depth.php?benchmark=depth_prediction  
 
 Configure your dataset paths in "dataloaders/path.py".
 
