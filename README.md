@@ -31,26 +31,26 @@ Download the KITTI Depth dataset: http://www.cvlibs.net/datasets/kitti/eval_dept
 Configure your dataset paths in "dataloaders/path.py".
 
 ### Training
-Examples for training an FCRN model from scratch:
-`python main.py --dataset kitti --lr 0.001 --epochs 20 --optim adam --resnet_layers 50 --loss berhu`
-`python main.py --dataset nyu --lr 0.001 --epochs 20 --optim adam --resnet_layers 18 --loss l1`
+Examples for training an FCRN model from scratch:  
+`python main.py --dataset kitti --lr 0.001 --epochs 20 --optim adam --resnet_layers 50 --loss berhu`  
+`python main.py --dataset nyu --lr 0.001 --epochs 20 --optim adam --resnet_layers 18 --loss l1`  
 
 Example for finetuning a FCRN model via FGSM adversarial training:
-`python main.py --model resnet --dataset kitti --lr 0.0001 --epochs 10 --optim adam --resnet_layers 50 --loss l2 --resume /path/to/pretrained/model --adv_training True --attack mifgsm --iterations 1 --epsilon 5 --alpha 5`
+`python main.py --model resnet --dataset kitti --lr 0.0001 --epochs 10 --optim adam --resnet_layers 50 --loss l2 --resume /path/to/pretrained/model --adv_training True --attack mifgsm --iterations 1 --epsilon 5 --alpha 5`  
 
-We do not support training AdaBins or DPT from scratch, but pretrained models can be found here:
-`AdaBins: https://github.com/shariqfarooq123/AdaBins`
-`DPT: https://github.com/intel-isl/DPT`
-
+We do not support training AdaBins or DPT from scratch, but pretrained models can be found here:  
+`AdaBins: https://github.com/shariqfarooq123/AdaBins`  
+`DPT: https://github.com/intel-isl/DPT`  
+ 
 ### Evaluation 
-Evaluating a given model:
-`python eval.py --dataset kitti --model dpt--resume /path/to/pretrained/model --attack none`
+Evaluating a given model:  
+`python eval.py --dataset kitti --model dpt--resume /path/to/pretrained/model --attack none`  
 
-Attacking and evaluating a given model:
-`python eval.py --dataset nyu --model adabins --resume /path/to/pretrained/model --attack pgd --epsilon 3 --iterations 7 --loss l1`
-`python eval.py --dataset kitti --model dpt --resume /path/to/pretrained/model --attack mifgsm --targeted True  --move_target 1.0`
+Attacking and evaluating a given model:  
+`python eval.py --dataset nyu --model adabins --resume /path/to/pretrained/model --attack pgd --epsilon 3 --iterations 7 --loss l1`  
+`python eval.py --dataset kitti --model dpt --resume /path/to/pretrained/model --attack mifgsm --targeted True  --move_target 1.0`  
 
-(Note that the above are simply examples and do not necesarily result in optimal performance)
+(Note that the above are simply examples and do not necesarily result in optimal performance)  
 
 List of available arguments:
 - **--num_agents** | number of agents to spawn into the world
