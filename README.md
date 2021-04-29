@@ -2,7 +2,8 @@
 
 ### Adversarial attacks on state of the art monocular depth estimation networks
 -  Contains FCRN, AdaBins, and DPT depth estimation networks
--  Implements PGD, FGSM, and MI-FGSM non-targeted and targeted adversarial attacks with L1, L2, and Reverse Huber loss
+-  Implements PGD, FGSM, and MI-FGSM adversarial attacks
+  -  non-targeted and targeted versions with L1, L2, and Reverse Huber loss options
 -  Support for KITTI and NYUv2 depth datasets
 
 FCRN reference: https://arxiv.org/abs/1606.00373  
